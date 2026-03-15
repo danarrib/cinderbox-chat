@@ -250,7 +250,7 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
       <option value="en">EN</option>
       <option value="pt-BR">PT</option>
     </select>
-    <button class="btn btn-sm btn-outline-secondary btn-theme-toggle" onclick="toggleTheme()" title="Toggle theme"></button>
+    <button class="btn btn-sm btn-outline-secondary btn-theme-toggle" onclick="toggleTheme()" data-i18n-title="btn.toggle_theme" title="Toggle theme"></button>
     <div id="nav-avatar-btn" onclick="toggleNavMenu()" title="Account"></div>
     <div id="nav-menu" class="d-none">
       <div class="nav-menu-item" onclick="openProfileFromNav()" data-i18n="nav.profile">Profile</div>
@@ -308,7 +308,7 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <div id="screen-profile" class="screen">
   <div class="cb-card p-4" style="width:100%;max-width:400px;margin:2rem">
     <div class="d-flex align-items-center mb-3 gap-2">
-      <button class="btn btn-sm btn-outline-secondary" id="btn-profile-back">← Back</button>
+      <button class="btn btn-sm btn-outline-secondary" id="btn-profile-back" data-i18n="btn.back">← Back</button>
       <h5 class="mb-0" data-i18n="profile.title">Profile</h5>
     </div>
     <div class="text-center mb-3">
@@ -332,17 +332,17 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <div id="screen-create" class="screen">
   <div class="cb-card p-4" style="width:100%;max-width:440px;margin:2rem">
     <div class="d-flex align-items-center mb-3 gap-2">
-      <button class="btn btn-sm btn-outline-secondary" id="btn-create-back">← Back</button>
+      <button class="btn btn-sm btn-outline-secondary" id="btn-create-back" data-i18n="btn.back">← Back</button>
       <h5 class="mb-0" data-i18n="btn.create_room">Create Room</h5>
     </div>
     <form id="create-form">
       <div class="mb-3">
         <label class="form-label" data-i18n="label.password">Room Password</label>
-        <input type="text" class="form-control" id="create-password" placeholder="Share this with participants" required autocomplete="off">
+        <input type="text" class="form-control" id="create-password" placeholder="Share this with participants" data-i18n-placeholder="create.password_placeholder" required autocomplete="off">
         <div class="form-text text-muted">Never sent to the server. Share via separate channel.</div>
       </div>
       <div class="mb-3">
-        <label class="form-label">Room Name <span class="text-muted">(optional)</span></label>
+        <label class="form-label"><span data-i18n="create.room_name_label">Room Name</span> <span class="text-muted" data-i18n="create.room_name_optional">(optional)</span></label>
         <input type="text" class="form-control" id="create-name" placeholder="e.g. Team Alpha" maxlength="64">
       </div>
       <div class="mb-3">
@@ -366,7 +366,7 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <div id="screen-join" class="screen">
   <div class="cb-card p-4" style="width:100%;max-width:440px;margin:2rem">
     <div class="d-flex align-items-center mb-3 gap-2">
-      <button class="btn btn-sm btn-outline-secondary" id="btn-join-back">← Back</button>
+      <button class="btn btn-sm btn-outline-secondary" id="btn-join-back" data-i18n="btn.back">← Back</button>
       <h5 class="mb-0" data-i18n="btn.join_room">Join Room</h5>
     </div>
     <form id="join-form">
@@ -422,11 +422,11 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
       <button class="btn btn-sm btn-outline-secondary" onclick="cancelRecording()" data-i18n="rec.cancel">Cancel</button>
     </div>
     <div id="chat-inputbar">
-      <button class="btn btn-outline-secondary" id="btn-attach" title="Attach image" style="width:32px;height:32px;padding:0">📸</button>
+      <button class="btn btn-outline-secondary" id="btn-attach" data-i18n-title="btn.attach_image" title="Attach image" style="width:32px;height:32px;padding:0">📸</button>
       <input type="file" id="image-file" accept="image/*" class="d-none">
       <textarea id="msg-input" class="form-control form-control-sm" rows="1" placeholder="Type a message…" style="flex:1" data-i18n-placeholder="placeholder.message"></textarea>
-      <button id="btn-sv" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" title="Single-view" onclick="toggleSvButton()">💣</button>
-      <button id="btn-action" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" title="Record audio">🎙</button>
+      <button id="btn-sv" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" data-i18n-title="btn.single_view_title" title="Single-view" onclick="toggleSvButton()">💣</button>
+      <button id="btn-action" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" data-i18n-title="btn.record_audio" title="Record audio">🎙</button>
     </div>
   </div>
 
@@ -2902,6 +2902,17 @@ const STRINGS = {
     'ack.no_recipients': 'No recipients.',
     'ack.deletion_requested': '🗑 Deletion requested',
     'room.no_rooms': 'No rooms yet.',
+    'btn.back': '← Back',
+    'btn.toggle_theme': 'Toggle theme',
+    'btn.attach_image': 'Attach image',
+    'btn.single_view_title': 'Single-view',
+    'btn.record_audio': 'Record audio',
+    'btn.send_msg': 'Send',
+    'participants.only_you': 'Only you here',
+    'participants.count': '{n} participants',
+    'create.room_name_label': 'Room Name',
+    'create.room_name_optional': '(optional)',
+    'create.password_placeholder': 'Share this with participants',
   },
   'pt-BR': {
     'app.name': 'Cinderbox',
@@ -2986,6 +2997,17 @@ const STRINGS = {
     'ack.no_recipients': 'Sem destinatários.',
     'ack.deletion_requested': '🗑 Exclusão solicitada',
     'room.no_rooms': 'Sem salas ainda.',
+    'btn.back': '← Voltar',
+    'btn.toggle_theme': 'Alternar tema',
+    'btn.attach_image': 'Anexar imagem',
+    'btn.single_view_title': 'Visualização única',
+    'btn.record_audio': 'Gravar áudio',
+    'btn.send_msg': 'Enviar',
+    'participants.only_you': 'Somente você aqui',
+    'participants.count': '{n} participantes',
+    'create.room_name_label': 'Nome da Sala',
+    'create.room_name_optional': '(opcional)',
+    'create.password_placeholder': 'Compartilhe com os participantes',
   }
 };
 
@@ -3012,6 +3034,9 @@ function applyI18n() {
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.dataset.i18nTitle);
   });
   const sel = document.getElementById('lang-select');
   if (sel) sel.value = currentLang;
@@ -3177,7 +3202,7 @@ function fmtTime(d) {
 }
 function fmtDate(d) {
   if (!(d instanceof Date)) d = new Date(d);
-  return d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
+  return d.toLocaleDateString(currentLang || undefined, {weekday:'long',month:'long',day:'numeric'});
 }
 function isSameDay(a, b) {
   a = new Date(a); b = new Date(b);
@@ -3536,7 +3561,7 @@ function updateChatTopbar() {
   document.getElementById('chat-room-avatar').innerHTML = getRoomAvatarHtml(currentRoomId, 36);
   const pres = presenceMap[currentRoomId] || [];
   document.getElementById('chat-participant-count').textContent =
-    pres.length === 0 ? 'Only you here' : `${pres.length + 1} participant${pres.length > 0 ? 's' : ''}`;
+    pres.length === 0 ? t('participants.only_you') : t('participants.count').replace('{n}', pres.length + 1);
 
   // Hide participants panel for single-view rooms
   const room = getRoomById(currentRoomId);
@@ -5034,11 +5059,13 @@ function updateActionButton() {
   if (hasText) {
     btn.textContent = '📨';
     btn.className = 'btn btn-sm btn-cb-primary';
-    btn.title = 'Send';
+    btn.title = t('btn.send_msg');
+    btn.dataset.i18nTitle = 'btn.send_msg';
   } else {
     btn.textContent = '🎙';
     btn.className = 'btn btn-sm btn-outline-secondary';
-    btn.title = 'Record audio';
+    btn.title = t('btn.record_audio');
+    btn.dataset.i18nTitle = 'btn.record_audio';
   }
   btn.style.cssText = 'width:32px;height:32px;padding:0';
 }
