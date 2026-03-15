@@ -246,6 +246,10 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <nav id="main-navbar" class="d-flex align-items-center px-3 py-2">
   <div class="logo-text" style="font-size:1.1rem;cursor:pointer" onclick="logoClick()">Cinderbox<span class="logo-dot">.</span></div>
   <div class="ms-auto d-flex align-items-center gap-2">
+    <select id="lang-select" class="form-select form-select-sm" style="width:auto" onchange="setLang(this.value)">
+      <option value="en">EN</option>
+      <option value="pt-BR">PT</option>
+    </select>
     <button class="btn btn-sm btn-outline-secondary btn-theme-toggle" onclick="toggleTheme()" title="Toggle theme"></button>
     <div id="nav-avatar-btn" onclick="toggleNavMenu()" title="Account"></div>
     <div id="nav-menu" class="d-none">
@@ -294,9 +298,9 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <div id="screen-landing" class="screen">
   <div class="text-center" style="max-width:400px;padding:2rem">
     <div class="logo-text mb-2">Cinderbox<span class="logo-dot">.</span></div>
-    <p class="text-muted mb-4">Ephemeral encrypted chat. No accounts. No traces.</p>
-    <button class="btn btn-cb-primary btn-lg w-100 mb-3" id="btn-create">Create Room</button>
-    <button class="btn btn-outline-secondary btn-lg w-100" id="btn-join">Join Room</button>
+    <p class="text-muted mb-4" data-i18n="landing.tagline">Ephemeral encrypted chat. No accounts. No traces.</p>
+    <button class="btn btn-cb-primary btn-lg w-100 mb-3" id="btn-create" data-i18n="btn.create_room">Create Room</button>
+    <button class="btn btn-outline-secondary btn-lg w-100" id="btn-join" data-i18n="btn.join_room">Join Room</button>
   </div>
 </div>
 
@@ -329,11 +333,11 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
   <div class="cb-card p-4" style="width:100%;max-width:440px;margin:2rem">
     <div class="d-flex align-items-center mb-3 gap-2">
       <button class="btn btn-sm btn-outline-secondary" id="btn-create-back">← Back</button>
-      <h5 class="mb-0">Create Room</h5>
+      <h5 class="mb-0" data-i18n="btn.create_room">Create Room</h5>
     </div>
     <form id="create-form">
       <div class="mb-3">
-        <label class="form-label">Room Password</label>
+        <label class="form-label" data-i18n="label.password">Room Password</label>
         <input type="text" class="form-control" id="create-password" placeholder="Share this with participants" required autocomplete="off">
         <div class="form-text text-muted">Never sent to the server. Share via separate channel.</div>
       </div>
@@ -342,18 +346,18 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
         <input type="text" class="form-control" id="create-name" placeholder="e.g. Team Alpha" maxlength="64">
       </div>
       <div class="mb-3">
-        <label class="form-label">Message Retention</label>
+        <label class="form-label" data-i18n="label.retention">Message Retention</label>
         <select class="form-select" id="create-retention">
-          <option value="0">1 hour</option>
-          <option value="1">6 hours</option>
-          <option value="2" selected>24 hours (default)</option>
-          <option value="3">12 hours</option>
-          <option value="4">Single-view</option>
-          <option value="5">Permanent</option>
+          <option value="0" data-i18n="retention.1h">1 hour</option>
+          <option value="1" data-i18n="retention.6h">6 hours</option>
+          <option value="2" selected data-i18n="retention.24h">24 hours (default)</option>
+          <option value="3" data-i18n="retention.12h">12 hours</option>
+          <option value="4" data-i18n="retention.single_view">Single-view</option>
+          <option value="5" data-i18n="retention.permanent">Permanent</option>
         </select>
       </div>
       <div id="create-error" class="alert alert-danger py-2 small d-none"></div>
-      <button type="submit" class="btn btn-cb-primary w-100" id="create-btn">Create Room</button>
+      <button type="submit" class="btn btn-cb-primary w-100" id="create-btn" data-i18n="btn.create_room">Create Room</button>
     </form>
   </div>
 </div>
@@ -363,19 +367,19 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
   <div class="cb-card p-4" style="width:100%;max-width:440px;margin:2rem">
     <div class="d-flex align-items-center mb-3 gap-2">
       <button class="btn btn-sm btn-outline-secondary" id="btn-join-back">← Back</button>
-      <h5 class="mb-0">Join Room</h5>
+      <h5 class="mb-0" data-i18n="btn.join_room">Join Room</h5>
     </div>
     <form id="join-form">
       <div class="mb-3">
-        <label class="form-label">Room ID</label>
+        <label class="form-label" data-i18n="label.room_id">Room ID</label>
         <input type="text" class="form-control" id="join-room-id" placeholder="xxxxxxxx-xxxx-4xxx-xxxx-xxxxxxxxxxxx" required>
       </div>
       <div class="mb-3">
-        <label class="form-label">Room Password</label>
+        <label class="form-label" data-i18n="label.password">Room Password</label>
         <input type="password" class="form-control" id="join-password" required autocomplete="off">
       </div>
       <div id="join-error" class="alert alert-danger py-2 small d-none"></div>
-      <button type="submit" class="btn btn-cb-primary w-100" id="join-btn">Join Room</button>
+      <button type="submit" class="btn btn-cb-primary w-100" id="join-btn" data-i18n="btn.join_room">Join Room</button>
     </form>
   </div>
 </div>
@@ -420,13 +424,9 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
     <div id="chat-inputbar">
       <button class="btn btn-outline-secondary" id="btn-attach" title="Attach image" style="width:32px;height:32px;padding:0">📸</button>
       <input type="file" id="image-file" accept="image/*" class="d-none">
-      <textarea id="msg-input" class="form-control form-control-sm" rows="1" placeholder="Type a message…" style="flex:1"></textarea>
-      <div class="form-check form-switch mb-0" title="Single-view">
-        <input class="form-check-input" type="checkbox" role="switch" id="sv-toggle" style="cursor:pointer">
-        <label class="form-check-label" for="sv-toggle" style="cursor:pointer;font-size:.85rem">💣</label>
-      </div>
-      <button id="btn-mic" class="btn btn-primary" onclick="startRecording()" title="Record audio" style="width:32px;height:32px;padding:0">🎙</button>
-      <button class="btn btn-cb-primary" id="btn-send" style="width:32px;height:32px;padding:0">📨</button>
+      <textarea id="msg-input" class="form-control form-control-sm" rows="1" placeholder="Type a message…" style="flex:1" data-i18n-placeholder="placeholder.message"></textarea>
+      <button id="btn-sv" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" title="Single-view" onclick="toggleSvButton()">💣</button>
+      <button id="btn-action" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" title="Record audio">🎙</button>
     </div>
   </div>
 
@@ -2817,6 +2817,124 @@ var qrcode = function() {
 const API = 'api.php';
 const SERVER_ACK_TAG = '0000000000000000000000000000000000000000000000000000000000000000';
 
+/* ── i18n ─────────────────────────────────────────────────────────────────── */
+const STRINGS = {
+  en: {
+    'app.name': 'Cinderbox',
+    'landing.tagline': 'Ephemeral encrypted chat. No accounts. No traces.',
+    'btn.create_room': 'Create Room',
+    'btn.join_room': 'Join Room',
+    'btn.profile': 'Profile',
+    'btn.send': 'Send',
+    'btn.cancel': 'Cancel',
+    'btn.save': 'Save',
+    'btn.leave': 'Leave Room',
+    'btn.delete_room': 'Delete Room',
+    'label.handle': 'Handle',
+    'label.room_id': 'Room ID',
+    'label.password': 'Password',
+    'label.retention': 'Message Retention',
+    'retention.1h': '1 hour',
+    'retention.6h': '6 hours',
+    'retention.12h': '12 hours',
+    'retention.24h': '24 hours (default)',
+    'retention.single_view': 'Single-view',
+    'retention.permanent': 'Permanent',
+    'placeholder.message': 'Type a message…',
+    'placeholder.caption': 'Add a caption… (optional)',
+    'msg.single_view_sealed': 'Single-view message',
+    'msg.single_view_tap': '(tap to open)',
+    'msg.single_view_opening': '⏳ Opening…',
+    'msg.deleted': '🗑 You deleted this message',
+    'msg.joined': 'joined the room',
+    'msg.left': 'left the room',
+    'toast.too_large': 'Message is too large to send (max 1 MB).',
+    'toast.network_error': 'Network error — try again',
+    'toast.mic_denied': 'Microphone access denied',
+    'toast.recording_large': 'Recording too large (max 2 MB)',
+    'toast.img_encode_fail': 'Could not encode image.',
+    'toast.img_too_large': 'Image too large even after compression.',
+    'modal.message_info': 'Message Info',
+    'modal.close': '✕',
+    'ctx.message_data': 'Message data',
+    'ctx.reply': 'Reply',
+    'ctx.delete_for_me': 'Delete for me',
+    'ctx.delete_for_everyone': 'Delete for everyone',
+    'lang.selector': 'Language',
+  },
+  'pt-BR': {
+    'app.name': 'Cinderbox',
+    'landing.tagline': 'Chat cifrado e efêmero. Sem contas. Sem rastros.',
+    'btn.create_room': 'Criar Sala',
+    'btn.join_room': 'Entrar na Sala',
+    'btn.profile': 'Perfil',
+    'btn.send': 'Enviar',
+    'btn.cancel': 'Cancelar',
+    'btn.save': 'Salvar',
+    'btn.leave': 'Sair da Sala',
+    'btn.delete_room': 'Excluir Sala',
+    'label.handle': 'Nome',
+    'label.room_id': 'ID da Sala',
+    'label.password': 'Senha',
+    'label.retention': 'Retenção de mensagens',
+    'retention.1h': '1 hora',
+    'retention.6h': '6 horas',
+    'retention.12h': '12 horas',
+    'retention.24h': '24 horas (padrão)',
+    'retention.single_view': 'Visualização única',
+    'retention.permanent': 'Permanente',
+    'placeholder.message': 'Digite uma mensagem…',
+    'placeholder.caption': 'Adicionar legenda… (opcional)',
+    'msg.single_view_sealed': 'Mensagem de visualização única',
+    'msg.single_view_tap': '(toque para abrir)',
+    'msg.single_view_opening': '⏳ Abrindo…',
+    'msg.deleted': '🗑 Você excluiu esta mensagem',
+    'msg.joined': 'entrou na sala',
+    'msg.left': 'saiu da sala',
+    'toast.too_large': 'Mensagem muito grande para enviar (máx. 1 MB).',
+    'toast.network_error': 'Erro de rede — tente novamente',
+    'toast.mic_denied': 'Acesso ao microfone negado',
+    'toast.recording_large': 'Gravação muito grande (máx. 2 MB)',
+    'toast.img_encode_fail': 'Não foi possível codificar a imagem.',
+    'toast.img_too_large': 'Imagem muito grande mesmo após compressão.',
+    'modal.message_info': 'Informações da Mensagem',
+    'modal.close': '✕',
+    'ctx.message_data': 'Dados da mensagem',
+    'ctx.reply': 'Responder',
+    'ctx.delete_for_me': 'Excluir para mim',
+    'ctx.delete_for_everyone': 'Excluir para todos',
+    'lang.selector': 'Idioma',
+  }
+};
+
+let currentLang = localStorage.getItem('cc_lang') || 'en';
+
+function t(key) {
+  return (STRINGS[currentLang] && STRINGS[currentLang][key]) || STRINGS['en'][key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('cc_lang', lang);
+  applyI18n();
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+      el.placeholder = t(key);
+    } else {
+      el.textContent = t(key);
+    }
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  const sel = document.getElementById('lang-select');
+  if (sel) sel.value = currentLang;
+}
+
 /* ── Debug logging ────────────────────────────────────────────────────────── */
 // Enable in browser console: localStorage.setItem('cc_debug', '1')
 // Disable:                   localStorage.removeItem('cc_debug')
@@ -2953,6 +3071,7 @@ let recordingTimer = null;
 let recordingSeconds = 0;
 let pendingImgDataUrl = null;
 let pendingImgIsSingleView = false;
+let svButtonActive = false;
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 function uuidv4() {
@@ -3401,6 +3520,9 @@ async function renderMessages(roomId) {
   const msgMap = {};
   for (const m of messages) { if (m.id) msgMap[m.id] = m; }
 
+  let prevSenderTag = null;
+  let prevDateStr = null;
+
   for (const msg of messages) {
     // Skip silent internal types
     if (['profile_update','room_name','ack_delivered','ack_viewed','ack_single_view_deleted','ask_for_delete','ack_deleted'].includes(msg.type)) continue;
@@ -3410,6 +3532,9 @@ async function renderMessages(roomId) {
       el.className = 'system-notice';
       el.textContent = msg.content;
       container.appendChild(el);
+      // System notices reset the incoming sequence
+      prevSenderTag = null;
+      prevDateStr = null;
       continue;
     }
 
@@ -3426,16 +3551,33 @@ async function renderMessages(roomId) {
       sep.textContent = fmtDate(msgDate);
       container.appendChild(sep);
       lastDate = msgDate;
+      // Date separator resets sequence
+      prevSenderTag = null;
+      prevDateStr = null;
     }
 
-    container.appendChild(buildMessageEl(msg, myTag));
+    const isOut = msg.is_outgoing || msg.sender_tag === myTag;
+    const msgDateStr = msg.sent_at ? new Date(msg.sent_at).toDateString() : null;
+    const showHandle = !isOut && (
+      msg.sender_tag !== prevSenderTag || msgDateStr !== prevDateStr
+    );
+
+    container.appendChild(buildMessageEl(msg, myTag, showHandle));
+
+    if (!isOut) {
+      prevSenderTag = msg.sender_tag;
+      prevDateStr = msgDateStr;
+    } else {
+      prevSenderTag = null;
+      prevDateStr = null;
+    }
   }
 
   container.scrollTop = container.scrollHeight;
   setupViewObserver(container, roomId, myTag);
 }
 
-function buildMessageEl(msg, myTag) {
+function buildMessageEl(msg, myTag, showHandle = true) {
   const isOut = msg.is_outgoing || msg.sender_tag === myTag;
   const row = document.createElement('div');
   row.className = 'msg-row ' + (isOut ? 'outgoing' : 'incoming');
@@ -3449,7 +3591,7 @@ function buildMessageEl(msg, myTag) {
 
   if (msg.status === 'delete_requested') {
     extraClass = ' tombstone-bubble';
-    bubbleContent = `<span style="opacity:.6;font-style:italic">🗑 You deleted this message</span>`;
+    bubbleContent = `<span style="opacity:.6;font-style:italic">${t('msg.deleted')}</span>`;
   } else if (msg.type === 'single_view') {
     if (msg.status === 'seen_and_deleted' || (msg.content === null && msg.status !== 'opening')) {
       extraClass = ' tombstone-bubble';
@@ -3461,19 +3603,16 @@ function buildMessageEl(msg, myTag) {
       }
     } else if (msg.status === 'opening') {
       extraClass = ' sv-sealed-bubble';
-      bubbleContent = `⏳ Opening…`;
+      bubbleContent = t('msg.single_view_opening');
     } else {
       // Sealed incoming single-view
       extraClass = ' sv-sealed-bubble';
-      const svProfile = profiles[msg.sender_tag];
-      const svSenderHandle = svProfile ? escHtml(svProfile.handle) : (msg.sender_tag ? msg.sender_tag.slice(0,8) + '…' : 'Someone');
-      const svTimeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString([], {dateStyle:'short', timeStyle:'short'}) : '';
-      bubbleContent = `💣 <span style="font-size:.85rem">Single-view message</span> <span style="font-size:.75rem;opacity:.6">(tap to open)</span><div style="font-size:.75rem;opacity:.6;margin-top:4px">${svSenderHandle} · ${svTimeStr}</div>`;
+      bubbleContent = `💣 <span style="font-size:.85rem">${t('msg.single_view_sealed')}</span> <span style="font-size:.75rem;opacity:.6">${t('msg.single_view_tap')}</span>`;
     }
   } else if (msg.type === 'audio') {
     bubbleContent = `<audio controls src="${escHtml(msg.content || '')}" style="max-width:100%"></audio>`;
   } else if (msg.type === 'image') {
-    bubbleContent = `<img src="${escHtml(msg.content || '')}" alt="image">`;
+    bubbleContent = `<img src="${escHtml(msg.content || '')}" alt="image" style="cursor:pointer;max-width:100%" class="lightbox-trigger" data-caption="${escHtml(msg.caption || '')}">`;
     if (msg.caption) {
       bubbleContent += `<div style="font-size:.85rem;margin-top:4px;word-break:break-word">${escHtml(msg.caption)}</div>`;
     }
@@ -3493,7 +3632,7 @@ function buildMessageEl(msg, myTag) {
   const timeStr = fmtTime(msg.sent_at);
 
   let handleEl = '';
-  if (!isOut) {
+  if (!isOut && showHandle) {
     const p = profiles[msg.sender_tag];
     const h = p ? p.handle : (msg.sender_tag.slice(0,8) + '…');
     handleEl = `<div class="msg-handle">${escHtml(h)}</div>`;
@@ -3527,6 +3666,11 @@ function buildMessageEl(msg, myTag) {
   }, { passive: true });
   row.addEventListener('touchend', () => { clearTimeout(longPressTimer); longPressTimer = null; });
   row.addEventListener('touchmove', () => { clearTimeout(longPressTimer); longPressTimer = null; });
+
+  // Lightbox click handlers for image messages
+  row.querySelectorAll('.lightbox-trigger').forEach(img => {
+    img.onclick = () => openLightbox(img.src, img.dataset.caption || null);
+  });
 
   return row;
 }
@@ -3604,8 +3748,8 @@ async function handleSingleViewOpen(msg) {
     dbg('sv open sync failed', err);
     msg.status = undefined;
     await dbPut('messages', msg);
-    if (bubble) bubble.innerHTML = '💣 <span style="font-size:.85rem">Single-view message</span> <span style="font-size:.75rem;opacity:.6">(tap to open)</span>';
-    showToast('Network error — try again', 'danger');
+    if (bubble) bubble.innerHTML = `💣 <span style="font-size:.85rem">${t('msg.single_view_sealed')}</span> <span style="font-size:.75rem;opacity:.6">${t('msg.single_view_tap')}</span>`;
+    showToast(t('toast.network_error'), 'danger');
     return;
   }
 
@@ -3613,14 +3757,28 @@ async function handleSingleViewOpen(msg) {
   currentSvMsg = msg;
   const overlay = document.getElementById('sv-modal-overlay');
   const contentEl = document.getElementById('sv-modal-content');
+
+  // Build header: sender handle + timestamp
+  const svProfiles = getProfiles();
+  const svProfile = svProfiles[msg.sender_tag];
+  const svHandle = svProfile ? escHtml(svProfile.handle) : (msg.sender_tag ? msg.sender_tag.slice(0, 8) + '…' : 'Someone');
+  const svTime = msg.sent_at ? new Date(msg.sent_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
+  const header = `<div style="margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--cb-border)">
+    <span style="font-weight:600">${svHandle}</span>
+    <span style="font-size:.8rem;opacity:.6;margin-left:8px">${svTime}</span>
+  </div>`;
+
   const type = msg.inner_type || 'text';
+  let body = '';
   if (type === 'image') {
-    contentEl.innerHTML = `<img src="${msg.content}" style="max-width:100%;border-radius:8px">`;
+    body = `<img src="${msg.content}" style="max-width:100%;border-radius:8px;display:block">`;
+    if (msg.caption) body += `<div style="margin-top:8px;font-size:.9rem;word-break:break-word">${escHtml(msg.caption)}</div>`;
   } else if (type === 'audio') {
-    contentEl.innerHTML = `<audio controls src="${msg.content}" style="width:100%"></audio>`;
+    body = `<audio controls src="${msg.content}" style="width:100%"></audio>`;
   } else {
-    contentEl.innerHTML = `<p style="margin:0;word-break:break-word">${escapeHtml(msg.text || msg.content || '')}</p>`;
+    body = `<p style="margin:0;word-break:break-word">${escHtml(msg.text || msg.content || '')}</p>`;
   }
+  contentEl.innerHTML = header + body;
   overlay.style.display = 'flex';
 }
 
@@ -3655,12 +3813,12 @@ function openCtxMenu(e, msgId, isOutgoing) {
   const items = [];
 
   if (isOutgoing) {
-    items.push({ label: 'Message data', action: () => showAckModal(msgId) });
-    items.push({ label: 'Delete for everyone', action: () => deleteForEveryone(msgId) });
+    items.push({ label: t('ctx.message_data'), action: () => showAckModal(msgId) });
+    items.push({ label: t('ctx.delete_for_everyone'), action: () => deleteForEveryone(msgId) });
   } else {
-    items.push({ label: 'Reply', action: () => setReplyTarget(msgId) });
+    items.push({ label: t('ctx.reply'), action: () => setReplyTarget(msgId) });
   }
-  items.push({ label: 'Delete for me', action: () => deleteForMe(msgId) });
+  items.push({ label: t('ctx.delete_for_me'), action: () => deleteForMe(msgId) });
 
   container.innerHTML = '';
   for (const item of items) {
@@ -3807,7 +3965,7 @@ async function startRecording() {
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
       const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-      if (blob.size > 2 * 1024 * 1024) { showToast('Recording too large (max 2 MB)', 'danger'); return; }
+      if (blob.size > 2 * 1024 * 1024) { showToast(t('toast.recording_large'), 'danger'); return; }
       const reader = new FileReader();
       reader.onload = () => sendAudio(reader.result);
       reader.readAsDataURL(blob);
@@ -3819,9 +3977,10 @@ async function startRecording() {
       if (recordingSeconds >= 20) stopRecording();
     }, 1000);
     document.getElementById('recording-bar').style.display = 'flex';
-    document.getElementById('btn-mic').style.display = 'none';
+    const btnAction = document.getElementById('btn-action');
+    if (btnAction) btnAction.style.display = 'none';
   } catch (err) {
-    showToast('Microphone access denied', 'danger');
+    showToast(t('toast.mic_denied'), 'danger');
   }
 }
 
@@ -3830,7 +3989,8 @@ function stopRecording() {
   clearInterval(recordingTimer);
   mediaRecorder.stop();
   document.getElementById('recording-bar').style.display = 'none';
-  document.getElementById('btn-mic').style.display = '';
+  const btnAction = document.getElementById('btn-action');
+  if (btnAction) { btnAction.style.display = ''; updateActionButton(); }
 }
 
 function cancelRecording() {
@@ -3842,13 +4002,15 @@ function cancelRecording() {
   audioChunks = [];
   mediaRecorder = null;
   document.getElementById('recording-bar').style.display = 'none';
-  document.getElementById('btn-mic').style.display = '';
+  const btnAction = document.getElementById('btn-action');
+  if (btnAction) { btnAction.style.display = ''; updateActionButton(); }
 }
 
 async function sendAudio(dataUrl) {
-  const svToggle = document.getElementById('sv-toggle');
-  if (svToggle && svToggle.checked) {
-    svToggle.checked = false;
+  if (svButtonActive) {
+    svButtonActive = false;
+    const btn = document.getElementById('btn-sv');
+    if (btn) { btn.className = 'btn btn-sm btn-outline-secondary'; btn.style.cssText = 'width:32px;height:32px;padding:0'; }
     await sendMessage({ type: 'single_view', content: dataUrl, inner_type: 'audio' });
   } else {
     await sendMessage({ type: 'audio', content: dataUrl });
@@ -4190,7 +4352,7 @@ async function doSync() {
             const profiles = getProfiles();
             const p = profiles[inboxItem.sender_tag];
             const displayHandle = p ? p.handle : (parsed.handle || inboxItem.sender_tag.slice(0,8) + '…');
-            await dbPut('messages', { id: inboxItem.id, room_id: roomId, type: 'system_notice', sender_tag: inboxItem.sender_tag, content: `${displayHandle} joined the room.`, sent_at: parsed.sent_at || new Date().toISOString(), status: null, is_outgoing: false });
+            await dbPut('messages', { id: inboxItem.id, room_id: roomId, type: 'system_notice', sender_tag: inboxItem.sender_tag, content: `${displayHandle} ${t('msg.joined')}.`, sent_at: parsed.sent_at || new Date().toISOString(), status: null, is_outgoing: false });
             if (roomId === currentRoomId) needsMessageRender = true;
             notifyNewMessage(getRoomDisplayName(roomId));
           }
@@ -4217,7 +4379,7 @@ async function doSync() {
             const profiles = getProfiles();
             const p = profiles[inboxItem.sender_tag];
             const displayHandle = p ? p.handle : (inboxItem.sender_tag.slice(0,8) + '…');
-            await dbPut('messages', { id: inboxItem.id, room_id: roomId, type: 'system_notice', sender_tag: inboxItem.sender_tag, content: `${displayHandle} left the room.`, sent_at: parsed.sent_at || new Date().toISOString(), status: null, is_outgoing: false });
+            await dbPut('messages', { id: inboxItem.id, room_id: roomId, type: 'system_notice', sender_tag: inboxItem.sender_tag, content: `${displayHandle} ${t('msg.left')}.`, sent_at: parsed.sent_at || new Date().toISOString(), status: null, is_outgoing: false });
             if (roomId === currentRoomId) needsMessageRender = true;
             notifyNewMessage(getRoomDisplayName(roomId));
           }
@@ -4403,7 +4565,7 @@ async function sendMessage(contentOrOpts, type = 'text') {
       const payload = JSON.stringify(payloadObj);
       const ciphertext = await encrypt(key, payload);
       if (ciphertext.length > 2097152) {
-        showToast('Message is too large to send (max 1 MB).', 'danger');
+        showToast(t('toast.too_large'), 'danger');
         await dbDelete('messages', msgId);
         return;
       }
@@ -4465,15 +4627,14 @@ async function handleImageFile(file) {
       if (b && !blob) blob = b; // keep first successful encode as fallback
     }
 
-    if (!blob) { showToast('Could not encode image.', 'danger'); return; }
-    if (blob.size > MAX_BLOB) { showToast('Image too large even after compression.', 'danger'); return; }
+    if (!blob) { showToast(t('toast.img_encode_fail'), 'danger'); return; }
+    if (blob.size > MAX_BLOB) { showToast(t('toast.img_too_large'), 'danger'); return; }
 
     const reader = new FileReader();
     reader.onload = async () => {
       const dataUrl = reader.result;
-      const svToggle = document.getElementById('sv-toggle');
       pendingImgDataUrl = dataUrl;
-      pendingImgIsSingleView = svToggle?.checked || false;
+      pendingImgIsSingleView = svButtonActive;
       document.getElementById('img-preview-thumb').src = dataUrl;
       document.getElementById('img-caption-input').value = '';
       const overlay = document.getElementById('img-preview-overlay');
@@ -4594,7 +4755,7 @@ async function deleteRoom() {
       showToast('Failed to delete: ' + (data.error || 'unknown'), true);
     }
   } catch(e) {
-    showToast('Network error', true);
+    showToast(t('toast.network_error'), true);
   }
 }
 
@@ -4755,11 +4916,55 @@ function closeAckModal() {
   document.getElementById('ack-modal-overlay').classList.remove('open');
 }
 
+/* ── Lightbox ─────────────────────────────────────────────────────────────── */
+function openLightbox(src, caption) {
+  document.getElementById('lightbox-img').src = src;
+  const cap = document.getElementById('lightbox-caption');
+  cap.textContent = caption || '';
+  cap.style.display = caption ? 'block' : 'none';
+  const overlay = document.getElementById('lightbox-overlay');
+  overlay.style.display = 'flex';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox-overlay').style.display = 'none';
+  document.getElementById('lightbox-img').src = '';
+}
+
+/* ── Single-view toggle button ────────────────────────────────────────────── */
+function toggleSvButton() {
+  svButtonActive = !svButtonActive;
+  const btn = document.getElementById('btn-sv');
+  if (btn) {
+    btn.className = svButtonActive
+      ? 'btn btn-sm btn-warning'
+      : 'btn btn-sm btn-outline-secondary';
+    btn.style.cssText = 'width:32px;height:32px;padding:0';
+  }
+}
+
+function updateActionButton() {
+  const btn = document.getElementById('btn-action');
+  if (!btn) return;
+  const hasText = document.getElementById('msg-input').value.trim().length > 0;
+  if (hasText) {
+    btn.textContent = '📨';
+    btn.className = 'btn btn-sm btn-cb-primary';
+    btn.title = 'Send';
+  } else {
+    btn.textContent = '🎙';
+    btn.className = 'btn btn-sm btn-outline-secondary';
+    btn.title = 'Record audio';
+  }
+  btn.style.cssText = 'width:32px;height:32px;padding:0';
+}
+
 /* ── Init ─────────────────────────────────────────────────────────────────── */
 async function init() {
   db = await openDB();
   updateThemeButtons();
   setupEventListeners();
+  applyI18n();
 
   // Crash recovery: reset any single-view messages stuck in 'opening' state
   try {
@@ -5043,13 +5248,31 @@ function setupEventListeners() {
   msgInput.addEventListener('input', () => {
     msgInput.style.height = 'auto';
     msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+    updateActionButton();
   });
-  document.getElementById('btn-send').onclick = sendCurrentMessage;
+  const btnAction = document.getElementById('btn-action');
+  btnAction.onclick = () => {
+    if (document.getElementById('msg-input').value.trim()) {
+      sendCurrentMessage();
+    } else {
+      startRecording();
+    }
+  };
   document.getElementById('btn-attach').onclick = () => document.getElementById('image-file').click();
   document.getElementById('image-file').addEventListener('change', e => {
     const file = e.target.files[0];
     if (file) { handleImageFile(file); e.target.value = ''; }
   });
+  // Escape key: close lightbox and other modals
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeLightbox();
+      closeAckModal();
+      closeCtxMenu();
+    }
+  });
+  // Initialize btn-action state
+  updateActionButton();
 }
 
 async function sendCurrentMessage() {
@@ -5058,9 +5281,11 @@ async function sendCurrentMessage() {
   if (!text) return;
   input.value = '';
   input.style.height = 'auto';
-  const svToggle = document.getElementById('sv-toggle');
-  if (svToggle && svToggle.checked) {
-    svToggle.checked = false;
+  updateActionButton();
+  if (svButtonActive) {
+    svButtonActive = false;
+    const btn = document.getElementById('btn-sv');
+    if (btn) { btn.className = 'btn btn-sm btn-outline-secondary'; btn.style.cssText = 'width:32px;height:32px;padding:0'; }
     await sendMessage({ type: 'single_view', content: text, inner_type: 'text' });
   } else {
     await sendMessage(text, 'text');
@@ -5094,7 +5319,7 @@ if ('serviceWorker' in navigator) {
   <div style="background:var(--cb-surface2);border-radius:12px;padding:20px;max-width:600px;width:90%;position:relative">
     <button onclick="cancelImgPreview()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.4rem;color:var(--bs-secondary-color);cursor:pointer">✕</button>
     <img id="img-preview-thumb" style="max-width:100%;border-radius:8px;display:block;margin-bottom:12px">
-    <textarea id="img-caption-input" class="form-control form-control-sm" rows="2" placeholder="Add a caption… (optional)" style="margin-bottom:12px;resize:none"></textarea>
+    <textarea id="img-caption-input" class="form-control form-control-sm" rows="2" placeholder="Add a caption… (optional)" data-i18n-placeholder="placeholder.caption" style="margin-bottom:12px;resize:none"></textarea>
     <div class="d-flex gap-2 justify-content-end">
       <button class="btn btn-sm btn-outline-secondary" onclick="cancelImgPreview()">Cancel</button>
       <button class="btn btn-sm btn-cb-primary" onclick="confirmImgSend()">Send</button>
@@ -5105,6 +5330,13 @@ if ('serviceWorker' in navigator) {
 <!-- Context menu -->
 <div id="ctx-menu" style="display:none;position:fixed;z-index:9999;background:var(--cb-surface2);border:1px solid var(--cb-border);border-radius:6px;padding:4px 0;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.4)">
   <div id="ctx-menu-items"></div>
+</div>
+
+<!-- Lightbox overlay -->
+<div id="lightbox-overlay" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1070;align-items:center;justify-content:center;flex-direction:column;padding:20px">
+  <button onclick="closeLightbox()" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.8rem;color:#fff;cursor:pointer;line-height:1">✕</button>
+  <img id="lightbox-img" style="max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain">
+  <div id="lightbox-caption" style="color:#fff;margin-top:12px;font-size:.9rem;text-align:center;max-width:600px;word-break:break-word"></div>
 </div>
 </body>
 </html>
