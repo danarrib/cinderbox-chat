@@ -5452,6 +5452,7 @@ function setupEventListeners() {
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
       document.getElementById('app').style.height = Math.round(window.visualViewport.height) + 'px';
+      window.scrollTo(0, 0);
     });
   }
 }
