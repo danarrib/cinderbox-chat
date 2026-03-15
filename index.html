@@ -482,6 +482,11 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
     <button class="btn btn-sm btn-outline-danger w-100" onclick="deleteRoom()" data-i18n="btn.delete_room">Delete Room</button>
     <div class="form-text text-muted mt-1" data-i18n="settings.delete_desc">Permanently deletes the room and all messages for everyone.</div>
   </div>
+  <hr style="border-color:var(--cb-border)">
+  <div>
+    <label class="form-label text-muted">Debug info</label>
+    <div id="settings-debug-info" style="font-size:.75rem;color:var(--cb-text-muted);font-family:monospace;white-space:pre-wrap;word-break:break-all"></div>
+  </div>
 </div>
 
 <!-- ACK info modal -->
@@ -4688,6 +4693,11 @@ function refreshSyncDot() {
   }
   dot.style.color = color;
   dot.title = label;
+  const dbgEl = document.getElementById('settings-debug-info');
+  if (dbgEl) {
+    const rooms = getRooms();
+    dbgEl.textContent = `Sync: ${label}\nRooms: ${rooms.length}\nvisualViewport: ${window.visualViewport ? 'yes' : 'no'}\nUA: ${navigator.userAgent}`;
+  }
 }
 
 function startSync() {
