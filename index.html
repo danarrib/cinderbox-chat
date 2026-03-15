@@ -253,9 +253,9 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
     <button class="btn btn-sm btn-outline-secondary btn-theme-toggle" onclick="toggleTheme()" title="Toggle theme"></button>
     <div id="nav-avatar-btn" onclick="toggleNavMenu()" title="Account"></div>
     <div id="nav-menu" class="d-none">
-      <div class="nav-menu-item" onclick="openProfileFromNav()">Profile</div>
+      <div class="nav-menu-item" onclick="openProfileFromNav()" data-i18n="nav.profile">Profile</div>
       <div class="nav-menu-divider"></div>
-      <div class="nav-menu-item text-danger" onclick="clearData()">Clear data</div>
+      <div class="nav-menu-item text-danger" onclick="clearData()" data-i18n="nav.clear_data">Clear data</div>
     </div>
   </div>
 </nav>
@@ -265,31 +265,31 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
   <div class="cb-card p-4" style="width:100%;max-width:440px;margin:2rem">
     <div class="text-center mb-4">
       <div class="logo-text">Cinderbox<span class="logo-dot">.</span></div>
-      <p class="text-muted small mt-1">First-run database setup</p>
+      <p class="text-muted small mt-1" data-i18n="setup.first_run">First-run database setup</p>
     </div>
     <form id="setup-form">
       <div class="mb-3">
-        <label class="form-label">MySQL Host</label>
+        <label class="form-label" data-i18n="setup.host">MySQL Host</label>
         <input type="text" class="form-control" id="setup-host" value="localhost" required>
       </div>
       <div class="mb-3">
-        <label class="form-label">Port</label>
+        <label class="form-label" data-i18n="setup.port">Port</label>
         <input type="number" class="form-control" id="setup-port" value="3306" required>
       </div>
       <div class="mb-3">
-        <label class="form-label">Database Name</label>
+        <label class="form-label" data-i18n="setup.db_name">Database Name</label>
         <input type="text" class="form-control" id="setup-name" required>
       </div>
       <div class="mb-3">
-        <label class="form-label">Username</label>
+        <label class="form-label" data-i18n="setup.username">Username</label>
         <input type="text" class="form-control" id="setup-user" required>
       </div>
       <div class="mb-3">
-        <label class="form-label">Password</label>
+        <label class="form-label" data-i18n="setup.password">Password</label>
         <input type="password" class="form-control" id="setup-pass">
       </div>
       <div id="setup-error" class="alert alert-danger py-2 small d-none"></div>
-      <button type="submit" class="btn btn-cb-primary w-100" id="setup-btn">Connect &amp; Setup</button>
+      <button type="submit" class="btn btn-cb-primary w-100" id="setup-btn" data-i18n="setup.connect">Connect &amp; Setup</button>
     </form>
   </div>
 </div>
@@ -309,22 +309,22 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
   <div class="cb-card p-4" style="width:100%;max-width:400px;margin:2rem">
     <div class="d-flex align-items-center mb-3 gap-2">
       <button class="btn btn-sm btn-outline-secondary" id="btn-profile-back">← Back</button>
-      <h5 class="mb-0">Profile</h5>
+      <h5 class="mb-0" data-i18n="profile.title">Profile</h5>
     </div>
     <div class="text-center mb-3">
       <canvas id="avatar-canvas" width="128" height="128"></canvas>
       <img id="avatar-preview" src="" alt="Avatar" onclick="document.getElementById('avatar-file').click()">
       <input type="file" id="avatar-file" accept="image/*" class="d-none">
-      <div class="text-muted small mt-1">Click to upload photo</div>
+      <div class="text-muted small mt-1" data-i18n="profile.click_upload">Click to upload photo</div>
     </div>
     <div class="mb-3">
-      <label class="form-label">Handle</label>
+      <label class="form-label" data-i18n="profile.handle_label">Handle</label>
       <div class="input-group">
-        <input type="text" class="form-control" id="profile-handle" placeholder="Your display name" maxlength="32">
+        <input type="text" class="form-control" id="profile-handle" placeholder="Your display name" maxlength="32" data-i18n-placeholder="profile.handle_placeholder">
         <button class="btn btn-outline-secondary" id="btn-random-handle" title="Random name">🎲</button>
       </div>
     </div>
-    <button class="btn btn-cb-primary w-100" id="btn-save-profile">Save Profile</button>
+    <button class="btn btn-cb-primary w-100" id="btn-save-profile" data-i18n="profile.save">Save Profile</button>
   </div>
 </div>
 
@@ -392,7 +392,7 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
   <div id="sidebar">
     <div class="flex-1 overflow-auto p-2" id="room-list" style="flex:1;overflow-y:auto"></div>
     <div class="p-2 border-top" style="border-color:var(--cb-border)!important">
-      <button class="btn btn-sm btn-outline-secondary w-100" id="btn-new-room-sidebar">+ New Room</button>
+      <button class="btn btn-sm btn-outline-secondary w-100" id="btn-new-room-sidebar" data-i18n="sidebar.new_room">+ New Room</button>
     </div>
   </div>
 
@@ -410,16 +410,16 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
     <div id="chat-messages"></div>
     <div id="reply-bar" style="display:none;padding:6px 12px;background:var(--cb-surface2);border-top:1px solid var(--cb-border);align-items:center;gap:8px">
       <div style="flex:1;font-size:.85rem;color:var(--bs-secondary-color);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">
-        <span style="color:var(--cb-accent)">↩ Replying to: </span><span id="reply-bar-preview"></span>
+        <span style="color:var(--cb-accent)" data-i18n="reply.replying_to">↩ Replying to:</span> <span id="reply-bar-preview"></span>
       </div>
       <button class="btn btn-sm btn-outline-secondary" onclick="clearReplyTarget()" style="padding:2px 8px">✕</button>
     </div>
     <div id="recording-bar" style="display:none;padding:8px 12px;background:var(--cb-surface2);border-top:1px solid var(--cb-border);align-items:center;gap:8px">
       <span style="animation:pulse 1s infinite">🔴</span>
       <span id="rec-timer" style="font-variant-numeric:tabular-nums;min-width:3ch">0s</span>
-      <span style="flex:1;font-size:.85rem;color:var(--bs-secondary-color)">Recording…</span>
-      <button class="btn btn-sm btn-danger" onclick="stopRecording()">Send</button>
-      <button class="btn btn-sm btn-outline-secondary" onclick="cancelRecording()">Cancel</button>
+      <span style="flex:1;font-size:.85rem;color:var(--bs-secondary-color)" data-i18n="rec.recording">Recording…</span>
+      <button class="btn btn-sm btn-danger" onclick="stopRecording()" data-i18n="rec.send">Send</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="cancelRecording()" data-i18n="rec.cancel">Cancel</button>
     </div>
     <div id="chat-inputbar">
       <button class="btn btn-outline-secondary" id="btn-attach" title="Attach image" style="width:32px;height:32px;padding:0">📸</button>
@@ -432,7 +432,7 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 
   <!-- Right participants panel (desktop) -->
   <div id="participants-panel">
-    <div class="fw-semibold mb-2 small text-muted text-uppercase" style="letter-spacing:.05em">Participants</div>
+    <div class="fw-semibold mb-2 small text-muted text-uppercase" style="letter-spacing:.05em" data-i18n="participants.label">Participants</div>
     <div id="participants-list"></div>
   </div>
 </div>
@@ -441,36 +441,36 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <div id="settings-overlay" onclick="closeSettings()"></div>
 <div id="settings-panel">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h6 class="mb-0">Room Settings</h6>
-    <button class="btn btn-sm btn-outline-secondary" onclick="closeSettings()">✕</button>
+    <h6 class="mb-0" data-i18n="settings.title">Room Settings</h6>
+    <button class="btn btn-sm btn-outline-secondary" onclick="closeSettings()" data-i18n="modal.close">✕</button>
   </div>
   <div class="mb-3">
-    <label class="form-label">Room URL</label>
+    <label class="form-label" data-i18n="settings.room_url">Room URL</label>
     <div class="input-group">
       <input type="text" class="form-control form-control-sm" id="settings-room-url" readonly>
-      <button class="btn btn-sm btn-outline-secondary" onclick="copyRoomUrl()">Copy</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="copyRoomUrl()" data-i18n="settings.copy">Copy</button>
     </div>
   </div>
   <div class="mb-3 text-center">
     <div id="qr-container"></div>
   </div>
   <div class="mb-3">
-    <label class="form-label">Room Name</label>
+    <label class="form-label" data-i18n="settings.room_name_label">Room Name</label>
     <div class="input-group">
-      <input type="text" class="form-control form-control-sm" id="settings-room-name" placeholder="Set room name" maxlength="64">
-      <button class="btn btn-sm btn-outline-secondary" onclick="broadcastRoomName()">Set</button>
+      <input type="text" class="form-control form-control-sm" id="settings-room-name" placeholder="Set room name" maxlength="64" data-i18n-placeholder="settings.room_name_placeholder">
+      <button class="btn btn-sm btn-outline-secondary" onclick="broadcastRoomName()" data-i18n="settings.room_name_set">Set</button>
     </div>
-    <div class="form-text text-muted">Broadcasts to all participants.</div>
+    <div class="form-text text-muted" data-i18n="settings.broadcasts">Broadcasts to all participants.</div>
   </div>
   <hr style="border-color:var(--cb-border)">
   <div class="mb-2" id="settings-leave-section">
-    <button class="btn btn-sm btn-outline-warning w-100" onclick="leaveRoom()">Leave Room</button>
-    <div class="form-text text-muted mt-1">Announces your departure and removes this room from your device.</div>
+    <button class="btn btn-sm btn-outline-warning w-100" onclick="leaveRoom()" data-i18n="btn.leave">Leave Room</button>
+    <div class="form-text text-muted mt-1" data-i18n="settings.leave_desc">Announces your departure and removes this room from your device.</div>
   </div>
   <div id="settings-delete-section" class="d-none">
-    <label class="form-label text-danger">Danger Zone</label>
-    <button class="btn btn-sm btn-outline-danger w-100" onclick="deleteRoom()">Delete Room</button>
-    <div class="form-text text-muted mt-1">Permanently deletes the room and all messages for everyone.</div>
+    <label class="form-label text-danger" data-i18n="settings.danger_zone">Danger Zone</label>
+    <button class="btn btn-sm btn-outline-danger w-100" onclick="deleteRoom()" data-i18n="btn.delete_room">Delete Room</button>
+    <div class="form-text text-muted mt-1" data-i18n="settings.delete_desc">Permanently deletes the room and all messages for everyone.</div>
   </div>
 </div>
 
@@ -478,8 +478,8 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <div id="ack-modal-overlay" onclick="if(event.target===this)closeAckModal()">
   <div id="ack-modal" class="cb-card p-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
-      <h6 class="mb-0">Message Info</h6>
-      <button class="btn btn-sm btn-outline-secondary" onclick="closeAckModal()">✕</button>
+      <h6 class="mb-0" data-i18n="modal.message_info">Message Info</h6>
+      <button class="btn btn-sm btn-outline-secondary" onclick="closeAckModal()" data-i18n="modal.close">✕</button>
     </div>
     <div id="ack-modal-content"></div>
   </div>
@@ -2861,6 +2861,47 @@ const STRINGS = {
     'ctx.delete_for_me': 'Delete for me',
     'ctx.delete_for_everyone': 'Delete for everyone',
     'lang.selector': 'Language',
+    'nav.profile': 'Profile',
+    'nav.clear_data': 'Clear data',
+    'rec.recording': 'Recording…',
+    'rec.send': 'Send',
+    'rec.cancel': 'Cancel',
+    'reply.replying_to': '↩ Replying to:',
+    'img.cancel': 'Cancel',
+    'img.send': 'Send',
+    'setup.first_run': 'First-run database setup',
+    'setup.host': 'MySQL Host',
+    'setup.port': 'Port',
+    'setup.db_name': 'Database Name',
+    'setup.username': 'Username',
+    'setup.password': 'Password',
+    'setup.connect': 'Connect & Setup',
+    'profile.title': 'Profile',
+    'profile.click_upload': 'Click to upload photo',
+    'profile.handle_label': 'Handle',
+    'profile.save': 'Save Profile',
+    'profile.handle_placeholder': 'Your display name',
+    'sidebar.new_room': '+ New Room',
+    'participants.label': 'Participants',
+    'settings.title': 'Room Settings',
+    'settings.room_url': 'Room URL',
+    'settings.copy': 'Copy',
+    'settings.room_name_label': 'Room Name',
+    'settings.room_name_placeholder': 'Set room name',
+    'settings.room_name_set': 'Set',
+    'settings.broadcasts': 'Broadcasts to all participants.',
+    'settings.leave_desc': 'Announces your departure and removes this room from your device.',
+    'settings.danger_zone': 'Danger Zone',
+    'settings.delete_desc': 'Permanently deletes the room and all messages for everyone.',
+    'toast.url_copied': 'URL copied!',
+    'toast.img_load_fail': 'Could not load image.',
+    'toast.room_name_broadcast': 'Room name updated and broadcast to participants.',
+    'toast.room_deleted': 'Room deleted.',
+    'toast.delete_failed': 'Failed to delete:',
+    'toast.profile_saved': 'Profile saved!',
+    'ack.no_recipients': 'No recipients.',
+    'ack.deletion_requested': '🗑 Deletion requested',
+    'room.no_rooms': 'No rooms yet.',
   },
   'pt-BR': {
     'app.name': 'Cinderbox',
@@ -2904,6 +2945,47 @@ const STRINGS = {
     'ctx.delete_for_me': 'Excluir para mim',
     'ctx.delete_for_everyone': 'Excluir para todos',
     'lang.selector': 'Idioma',
+    'nav.profile': 'Perfil',
+    'nav.clear_data': 'Limpar dados',
+    'rec.recording': 'Gravando…',
+    'rec.send': 'Enviar',
+    'rec.cancel': 'Cancelar',
+    'reply.replying_to': '↩ Respondendo a:',
+    'img.cancel': 'Cancelar',
+    'img.send': 'Enviar',
+    'setup.first_run': 'Configuração inicial do banco de dados',
+    'setup.host': 'Host MySQL',
+    'setup.port': 'Porta',
+    'setup.db_name': 'Nome do banco de dados',
+    'setup.username': 'Usuário',
+    'setup.password': 'Senha',
+    'setup.connect': 'Conectar e Configurar',
+    'profile.title': 'Perfil',
+    'profile.click_upload': 'Clique para enviar foto',
+    'profile.handle_label': 'Nome',
+    'profile.save': 'Salvar Perfil',
+    'profile.handle_placeholder': 'Seu nome de exibição',
+    'sidebar.new_room': '+ Nova Sala',
+    'participants.label': 'Participantes',
+    'settings.title': 'Configurações da Sala',
+    'settings.room_url': 'URL da Sala',
+    'settings.copy': 'Copiar',
+    'settings.room_name_label': 'Nome da Sala',
+    'settings.room_name_placeholder': 'Definir nome da sala',
+    'settings.room_name_set': 'Definir',
+    'settings.broadcasts': 'Transmite para todos os participantes.',
+    'settings.leave_desc': 'Anuncia sua saída e remove esta sala do seu dispositivo.',
+    'settings.danger_zone': 'Zona de Perigo',
+    'settings.delete_desc': 'Exclui permanentemente a sala e todas as mensagens para todos.',
+    'toast.url_copied': 'URL copiada!',
+    'toast.img_load_fail': 'Não foi possível carregar a imagem.',
+    'toast.room_name_broadcast': 'Nome da sala atualizado e transmitido aos participantes.',
+    'toast.room_deleted': 'Sala excluída.',
+    'toast.delete_failed': 'Falha ao excluir:',
+    'toast.profile_saved': 'Perfil salvo!',
+    'ack.no_recipients': 'Sem destinatários.',
+    'ack.deletion_requested': '🗑 Exclusão solicitada',
+    'room.no_rooms': 'Sem salas ainda.',
   }
 };
 
@@ -3346,7 +3428,7 @@ function closeSettings() {
 }
 function copyRoomUrl() {
   const url = document.getElementById('settings-room-url').value;
-  navigator.clipboard.writeText(url).then(() => showToast('URL copied!'));
+  navigator.clipboard.writeText(url).then(() => showToast(t('toast.url_copied')));
 }
 
 /* ── Room list / sidebar rendering ───────────────────────────────────────── */
@@ -3356,7 +3438,7 @@ async function renderRoomList() {
   listEl.innerHTML = '';
 
   if (rooms.length === 0) {
-    listEl.innerHTML = '<div class="text-muted small p-2">No rooms yet.</div>';
+    listEl.innerHTML = `<div class="text-muted small p-2">${t('room.no_rooms')}</div>`;
     return;
   }
 
@@ -3973,8 +4055,10 @@ async function startRecording() {
     mediaRecorder.start(200);
     recordingTimer = setInterval(() => {
       recordingSeconds++;
-      document.getElementById('rec-timer').textContent = recordingSeconds + 's';
-      if (recordingSeconds >= 20) stopRecording();
+      const recMins = Math.floor(recordingSeconds / 60);
+      const recSecs = recordingSeconds % 60;
+      document.getElementById('rec-timer').textContent = recMins + ':' + String(recSecs).padStart(2, '0');
+      if (recordingSeconds >= 120) stopRecording();
     }, 1000);
     document.getElementById('recording-bar').style.display = 'flex';
     const btnAction = document.getElementById('btn-action');
@@ -4593,7 +4677,7 @@ async function handleImageFile(file) {
   const MAX_BLOB = Math.floor(2097152 / 1.78);
   const img = new Image();
   const url = URL.createObjectURL(file);
-  img.onerror = () => { URL.revokeObjectURL(url); showToast('Could not load image.', 'danger'); };
+  img.onerror = () => { URL.revokeObjectURL(url); showToast(t('toast.img_load_fail'), 'danger'); };
   img.onload = async () => {
     URL.revokeObjectURL(url);
     let w = img.naturalWidth, h = img.naturalHeight;
@@ -4720,7 +4804,7 @@ async function broadcastRoomName() {
       sent_at: new Date().toISOString(),
     });
   }
-  showToast('Room name updated and broadcast to participants.');
+  showToast(t('toast.room_name_broadcast'));
   closeSettings();
 }
 
@@ -4750,9 +4834,9 @@ async function deleteRoom() {
       } else {
         showScreen('landing');
       }
-      showToast('Room deleted.');
+      showToast(t('toast.room_deleted'));
     } else {
-      showToast('Failed to delete: ' + (data.error || 'unknown'), true);
+      showToast(t('toast.delete_failed') + ' ' + (data.error || 'unknown'), true);
     }
   } catch(e) {
     showToast(t('toast.network_error'), true);
@@ -4904,11 +4988,11 @@ async function showAckModal(msgId) {
   }).join('');
 
   const deleteHeader = isDeleteRequested
-    ? `<div class="small text-muted mb-2" style="font-style:italic">🗑 Deletion requested</div>`
+    ? `<div class="small text-muted mb-2" style="font-style:italic">${t('ack.deletion_requested')}</div>`
     : '';
 
   document.getElementById('ack-modal-content').innerHTML =
-    deleteHeader + (rows.length ? rowsHtml : '<p class="text-muted small mb-0">No recipients.</p>');
+    deleteHeader + (rows.length ? rowsHtml : `<p class="text-muted small mb-0">${t('ack.no_recipients')}</p>`);
   document.getElementById('ack-modal-overlay').classList.add('open');
 }
 
@@ -5230,7 +5314,7 @@ function setupEventListeners() {
     }
     await broadcastProfileUpdate();
     updateNavAvatar();
-    showToast('Profile saved!');
+    showToast(t('toast.profile_saved'));
     document.getElementById('btn-profile-back').click();
   };
 
@@ -5321,8 +5405,8 @@ if ('serviceWorker' in navigator) {
     <img id="img-preview-thumb" style="max-width:100%;border-radius:8px;display:block;margin-bottom:12px">
     <textarea id="img-caption-input" class="form-control form-control-sm" rows="2" placeholder="Add a caption… (optional)" data-i18n-placeholder="placeholder.caption" style="margin-bottom:12px;resize:none"></textarea>
     <div class="d-flex gap-2 justify-content-end">
-      <button class="btn btn-sm btn-outline-secondary" onclick="cancelImgPreview()">Cancel</button>
-      <button class="btn btn-sm btn-cb-primary" onclick="confirmImgSend()">Send</button>
+      <button class="btn btn-sm btn-outline-secondary" onclick="cancelImgPreview()" data-i18n="img.cancel">Cancel</button>
+      <button class="btn btn-sm btn-cb-primary" onclick="confirmImgSend()" data-i18n="img.send">Send</button>
     </div>
   </div>
 </div>
