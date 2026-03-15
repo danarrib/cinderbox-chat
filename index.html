@@ -3198,7 +3198,7 @@ async function sha256(str) {
 
 function fmtTime(d) {
   if (!(d instanceof Date)) d = new Date(d);
-  return d.toLocaleTimeString(currentLang || undefined, {hour:'2-digit',minute:'2-digit',hour12: currentLang !== 'pt-BR'});
+  return d.toLocaleTimeString(currentLang || undefined, {hour:'2-digit',minute:'2-digit',hour12: currentLang === 'en'});
 }
 function fmtDate(d) {
   if (!(d instanceof Date)) d = new Date(d);
