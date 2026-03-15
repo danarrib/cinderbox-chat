@@ -4210,9 +4210,10 @@ async function sendAck(type, messageId, recipientTag, roomId) {
 async function doSync() {
   if (isSyncing) return;
   const rooms = getRooms();
-  if (rooms.length === 0) return;
+  if (rooms.length === 0) { updateSyncDot(true, 'No rooms joined'); return; }
 
   isSyncing = true;
+  let _syncErr = null;
   try {
     const handle = getHandle();
     // Determine sender_tag per room — use first room? No: sender_tag is per-room.
@@ -4647,21 +4648,24 @@ async function doSync() {
     if (needsMessageRender && currentRoomId) await renderMessages(currentRoomId);
     if (needsRoomListRender) await renderRoomList();
 
-    updateSyncDot(true);
   } catch(e) {
     dbg(`Sync ERROR:`, e.message, e);
-    updateSyncDot(false, e.message);
+    _syncErr = e.message || 'unknown error';
     // Keep outbox intact
   } finally {
     isSyncing = false;
+    if (_syncErr) updateSyncDot(false, _syncErr);
+    else updateSyncDot(true);
   }
 }
 
 let _lastSyncAt = null;
 let _lastSyncError = null;
-function updateSyncDot(ok, errMsg) {
+let _lastSyncNote = null;
+function updateSyncDot(ok, msg) {
   _lastSyncAt = Date.now();
-  _lastSyncError = ok ? null : (errMsg || 'error');
+  _lastSyncError = ok ? null : (msg || 'error');
+  _lastSyncNote = ok ? (msg || null) : null;
   refreshSyncDot();
 }
 function refreshSyncDot() {
@@ -4673,6 +4677,8 @@ function refreshSyncDot() {
     color = '#dc3545'; label = `Sync error: ${_lastSyncError}`;
   } else if (age === null) {
     color = '#6c757d'; label = 'Not synced yet';
+  } else if (_lastSyncNote) {
+    color = '#6c757d'; label = _lastSyncNote;
   } else if (age <= 12) {
     color = '#28a745'; label = `Synced ${age}s ago`;
   } else if (age <= 30) {
