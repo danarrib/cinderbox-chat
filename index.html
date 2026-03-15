@@ -3770,7 +3770,7 @@ function buildMessageEl(msg, myTag, showHandle = true) {
   row.addEventListener('contextmenu', e => openCtxMenu(e, msg.id, isOut));
   let longPressTimer = null;
   row.addEventListener('touchstart', e => {
-    longPressTimer = setTimeout(() => { openCtxMenu(e.touches[0], msg.id, isOut); }, 500);
+    longPressTimer = setTimeout(() => { openCtxMenu(e, msg.id, isOut, e.touches[0]); }, 500);
   }, { passive: true });
   row.addEventListener('touchend', () => { clearTimeout(longPressTimer); longPressTimer = null; });
   row.addEventListener('touchmove', () => { clearTimeout(longPressTimer); longPressTimer = null; });
@@ -3911,8 +3911,8 @@ function renderCurrentRoom() {
 }
 
 /* ── Context menu ─────────────────────────────────────────────────────────── */
-function openCtxMenu(e, msgId, isOutgoing) {
-  e.preventDefault();
+function openCtxMenu(e, msgId, isOutgoing, touch) {
+  if (e.preventDefault) e.preventDefault();
   const menu = document.getElementById('ctx-menu');
   const container = document.getElementById('ctx-menu-items');
   ctxMenuTarget = msgId;
@@ -3939,8 +3939,9 @@ function openCtxMenu(e, msgId, isOutgoing) {
     container.appendChild(div);
   }
 
-  const x = Math.min(e.clientX, window.innerWidth - 180);
-  const y = Math.min(e.clientY, window.innerHeight - (items.length * 40 + 10));
+  const pt = touch || e;
+  const x = Math.min(pt.clientX, window.innerWidth - 180);
+  const y = Math.min(pt.clientY, window.innerHeight - (items.length * 40 + 10));
   menu.style.left = x + 'px';
   menu.style.top = y + 'px';
   menu.style.display = 'block';
