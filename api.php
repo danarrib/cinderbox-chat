@@ -217,7 +217,7 @@ if ($action === 'create') {
     if (!preg_match('/^[0-9a-f]{64}$/i', $delete_token_hash)) {
         json_out(['ok' => false, 'error' => 'Invalid delete_token_hash']);
     }
-    if ($retention < 0 || $retention > 4) {
+    if ($retention < 0 || $retention > 5) {
         json_out(['ok' => false, 'error' => 'Invalid retention value']);
     }
 
@@ -476,11 +476,14 @@ function retention_interval(int $retention): string {
         case 2: return '24 HOUR';
         case 3: return '12 HOUR';
         case 4: return '24 HOUR';
+        case 5: return '100 YEAR'; // permanent
         default: return '24 HOUR';
     }
 }
 
 function lazy_expiry(PDO $pdo, string $room_id, int $retention): void {
+    if ($retention === 5) return;
+
     $interval = retention_interval($retention);
 
     $pdo->prepare(

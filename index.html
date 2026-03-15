@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1923">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cinderbox">
 <title>Cinderbox Chat</title>
 <script>(function(){var t=localStorage.getItem('cc_theme')||'dark';document.documentElement.setAttribute('data-bs-theme',t);})();</script>
 <style>
@@ -238,7 +244,7 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
 <div id="app">
 
 <nav id="main-navbar" class="d-flex align-items-center px-3 py-2">
-  <div class="logo-text" style="font-size:1.1rem">Cinderbox<span class="logo-dot">.</span></div>
+  <div class="logo-text" style="font-size:1.1rem;cursor:pointer" onclick="logoClick()">Cinderbox<span class="logo-dot">.</span></div>
   <div class="ms-auto d-flex align-items-center gap-2">
     <button class="btn btn-sm btn-outline-secondary btn-theme-toggle" onclick="toggleTheme()" title="Toggle theme"></button>
     <div id="nav-avatar-btn" onclick="toggleNavMenu()" title="Account"></div>
@@ -343,6 +349,7 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
           <option value="2" selected>24 hours (default)</option>
           <option value="3">12 hours</option>
           <option value="4">Single-view</option>
+          <option value="5">Permanent</option>
         </select>
       </div>
       <div id="create-error" class="alert alert-danger py-2 small d-none"></div>
@@ -2944,6 +2951,8 @@ let mediaRecorder = null;
 let audioChunks = [];
 let recordingTimer = null;
 let recordingSeconds = 0;
+let pendingImgDataUrl = null;
+let pendingImgIsSingleView = false;
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 function uuidv4() {
@@ -3147,10 +3156,34 @@ async function getMessagesForRoom(roomId) {
 }
 
 /* ── Screen navigation ────────────────────────────────────────────────────── */
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function notifyNewMessage(roomName) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (document.visibilityState === 'visible') return; // only notify when in background
+  new Notification('Cinderbox Chat', {
+    body: `New message in ${roomName || 'a room'}`,
+    icon: './icon.svg',
+    tag: 'cinderbox-msg',
+    silent: false,
+  });
+}
+
+function logoClick() {
+  if (currentRoomId) return; // in a room, do nothing
+  window.location.hash = '';
+  showScreen('landing');
+}
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + id);
   if (el) el.classList.add('active');
+  if (id === 'chat') requestNotificationPermission();
 }
 
 /* ── Sidebar (mobile) ─────────────────────────────────────────────────────── */
@@ -3432,12 +3465,18 @@ function buildMessageEl(msg, myTag) {
     } else {
       // Sealed incoming single-view
       extraClass = ' sv-sealed-bubble';
-      bubbleContent = `💣 <span style="font-size:.85rem">Single-view message</span> <span style="font-size:.75rem;opacity:.6">(tap to open)</span>`;
+      const svProfile = profiles[msg.sender_tag];
+      const svSenderHandle = svProfile ? escHtml(svProfile.handle) : (msg.sender_tag ? msg.sender_tag.slice(0,8) + '…' : 'Someone');
+      const svTimeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString([], {dateStyle:'short', timeStyle:'short'}) : '';
+      bubbleContent = `💣 <span style="font-size:.85rem">Single-view message</span> <span style="font-size:.75rem;opacity:.6">(tap to open)</span><div style="font-size:.75rem;opacity:.6;margin-top:4px">${svSenderHandle} · ${svTimeStr}</div>`;
     }
   } else if (msg.type === 'audio') {
     bubbleContent = `<audio controls src="${escHtml(msg.content || '')}" style="max-width:100%"></audio>`;
   } else if (msg.type === 'image') {
     bubbleContent = `<img src="${escHtml(msg.content || '')}" alt="image">`;
+    if (msg.caption) {
+      bubbleContent += `<div style="font-size:.85rem;margin-top:4px;word-break:break-word">${escHtml(msg.caption)}</div>`;
+    }
   } else {
     bubbleContent = escHtml(msg.content || msg.text || '');
   }
@@ -3740,6 +3779,18 @@ function getMessagePreview(msg) {
   return text.length > 60 ? text.slice(0, 60) + '…' : text;
 }
 
+function retentionLabel(retention) {
+  switch (retention) {
+    case 0: return '1 hour';
+    case 1: return '6 hours';
+    case 2: return '24 hours';
+    case 3: return '12 hours';
+    case 4: return 'Single-view';
+    case 5: return 'Permanent';
+    default: return '24 hours';
+  }
+}
+
 function scrollToMessage(msgId) {
   const el = document.querySelector(`[data-msg-id="${msgId}"]`);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3982,6 +4033,7 @@ async function doSync() {
       }
 
       let hasNew = false;
+      let lastStoredTs = 0;
 
       if ((rr.inbox || []).length > 0) {
         dbg(`Sync: received ${rr.inbox.length} inbox item(s) for room ${roomId.slice(0,8)}…`);
@@ -4140,6 +4192,7 @@ async function doSync() {
             const displayHandle = p ? p.handle : (parsed.handle || inboxItem.sender_tag.slice(0,8) + '…');
             await dbPut('messages', { id: inboxItem.id, room_id: roomId, type: 'system_notice', sender_tag: inboxItem.sender_tag, content: `${displayHandle} joined the room.`, sent_at: parsed.sent_at || new Date().toISOString(), status: null, is_outgoing: false });
             if (roomId === currentRoomId) needsMessageRender = true;
+            notifyNewMessage(getRoomDisplayName(roomId));
           }
           // Mark as known so presence detection doesn't double-send greetings
           if (!knownPresenceTags[roomId]) knownPresenceTags[roomId] = new Set();
@@ -4166,6 +4219,7 @@ async function doSync() {
             const displayHandle = p ? p.handle : (inboxItem.sender_tag.slice(0,8) + '…');
             await dbPut('messages', { id: inboxItem.id, room_id: roomId, type: 'system_notice', sender_tag: inboxItem.sender_tag, content: `${displayHandle} left the room.`, sent_at: parsed.sent_at || new Date().toISOString(), status: null, is_outgoing: false });
             if (roomId === currentRoomId) needsMessageRender = true;
+            notifyNewMessage(getRoomDisplayName(roomId));
           }
           // Remove from sticky presence
           if (presenceMap[roomId]) {
@@ -4219,6 +4273,11 @@ async function doSync() {
         const existing = await dbGet('messages', canonicalId);
         if (existing) { dbg(`  (duplicate, ignored)`); continue; }
 
+        // Prevent timestamp collisions in batch delivery
+        let msgTs = new Date(parsed.sent_at || new Date().toISOString()).getTime();
+        if (msgTs <= lastStoredTs) msgTs = lastStoredTs + 1;
+        lastStoredTs = msgTs;
+
         const msgObj = {
           id: canonicalId,
           room_id: roomId,
@@ -4229,13 +4288,19 @@ async function doSync() {
           text: parsed.text || null,
           replied_to_id: parsed.replied_to_id || null,
           inner_type: msgType === 'single_view' ? (parsed.inner_type || null) : null,
-          sent_at: parsed.sent_at || new Date().toISOString(),
+          caption: parsed.caption || null,
+          sent_at: new Date(msgTs).toISOString(),
           status: 'delivered',
           is_outgoing: false,
         };
         await dbPut('messages', msgObj);
         hasNew = true;
         if (roomId === currentRoomId) needsMessageRender = true;
+
+        // Browser notification for non-silent incoming messages
+        if (['text', 'image', 'audio', 'single_view'].includes(msgType)) {
+          notifyNewMessage(getRoomDisplayName(roomId));
+        }
 
         // Unread count if not current room
         if (roomId !== currentRoomId) {
@@ -4267,15 +4332,17 @@ function startSync() {
 
 /* ── Sending messages ─────────────────────────────────────────────────────── */
 async function sendMessage(contentOrOpts, type = 'text') {
-  // Accept either (content, type) or an options object { type, content, inner_type }
-  let content, inner_type;
+  // Accept either (content, type) or an options object { type, content, inner_type, caption }
+  let content, inner_type, caption;
   if (contentOrOpts && typeof contentOrOpts === 'object' && !Array.isArray(contentOrOpts) && typeof contentOrOpts.type === 'string') {
     type = contentOrOpts.type;
     content = contentOrOpts.content;
     inner_type = contentOrOpts.inner_type || null;
+    caption = contentOrOpts.caption || null;
   } else {
     content = contentOrOpts;
     inner_type = null;
+    caption = null;
   }
 
   if (!currentRoomId) return;
@@ -4301,6 +4368,7 @@ async function sendMessage(contentOrOpts, type = 'text') {
       id: msgId, room_id: currentRoomId, type: 'single_view',
       sender_tag: myTag, recipient_tag: myTag, content: null,
       inner_type: inner_type || null,
+      caption: caption || null,
       replied_to_id: repliedTo,
       sent_at: sentAt, status: 'sending', is_outgoing: true,
       recipient_tags: recipients, acks: [],
@@ -4309,6 +4377,7 @@ async function sendMessage(contentOrOpts, type = 'text') {
     await dbPut('messages', {
       id: msgId, room_id: currentRoomId, type,
       sender_tag: myTag, recipient_tag: myTag, content,
+      caption: caption || null,
       replied_to_id: repliedTo,
       sent_at: sentAt, status: 'sending', is_outgoing: true,
       recipient_tags: recipients, acks: [],
@@ -4330,6 +4399,7 @@ async function sendMessage(contentOrOpts, type = 'text') {
       const payloadObj = { type, content, sent_at: sentAt, original_id: msgId };
       if (repliedTo) payloadObj.replied_to_id = repliedTo;
       if (inner_type) payloadObj.inner_type = inner_type;
+      if (caption) payloadObj.caption = caption;
       const payload = JSON.stringify(payloadObj);
       const ciphertext = await encrypt(key, payload);
       if (ciphertext.length > 2097152) {
@@ -4402,11 +4472,12 @@ async function handleImageFile(file) {
     reader.onload = async () => {
       const dataUrl = reader.result;
       const svToggle = document.getElementById('sv-toggle');
-      if (svToggle?.checked) {
-        await sendMessage({ type: 'single_view', content: dataUrl, inner_type: 'image' });
-      } else {
-        await sendMessage(dataUrl, 'image');
-      }
+      pendingImgDataUrl = dataUrl;
+      pendingImgIsSingleView = svToggle?.checked || false;
+      document.getElementById('img-preview-thumb').src = dataUrl;
+      document.getElementById('img-caption-input').value = '';
+      const overlay = document.getElementById('img-preview-overlay');
+      overlay.style.display = 'flex';
     };
     reader.readAsDataURL(blob);
   };
@@ -4436,6 +4507,25 @@ async function broadcastProfileUpdate() {
         sent_at: new Date().toISOString(),
       });
     }
+  }
+}
+
+/* ── Image preview / caption ──────────────────────────────────────────────── */
+function cancelImgPreview() {
+  pendingImgDataUrl = null;
+  document.getElementById('img-preview-overlay').style.display = 'none';
+}
+
+async function confirmImgSend() {
+  if (!pendingImgDataUrl) return;
+  const dataUrl = pendingImgDataUrl;
+  const caption = document.getElementById('img-caption-input').value.trim();
+  const isSv = pendingImgIsSingleView;
+  cancelImgPreview();
+  if (isSv) {
+    await sendMessage({ type: 'single_view', content: dataUrl, inner_type: 'image', caption: caption || undefined });
+  } else {
+    await sendMessage({ type: 'image', content: dataUrl, caption: caption || undefined });
   }
 }
 
@@ -4678,6 +4768,29 @@ async function init() {
       if (msg.status === 'opening') {
         msg.status = undefined;
         await dbPut('messages', msg);
+      }
+    }
+  } catch(e) { /* ignore */ }
+
+  // Client-side expiry cleanup
+  try {
+    const allRooms = getRooms();
+    const now = Date.now();
+    const retentionMs = [3600000, 21600000, 86400000, 43200000]; // 1h, 6h, 24h, 12h (indices 0-3)
+    for (const room of allRooms) {
+      if (room.retention === 4 || room.retention === 5) continue; // single-view or permanent
+      const ms = retentionMs[room.retention] ?? 86400000;
+      const joined = new Date(room.joinedAt).getTime();
+      // Use last activity if available, otherwise joinedAt
+      if (now - joined > ms * 2) {
+        // Room has been around longer than 2× its retention — purge old messages
+        const msgs = await dbGetAll('messages');
+        for (const msg of msgs) {
+          if (msg.room_id === room.id) {
+            const msgTime = new Date(msg.sent_at).getTime();
+            if (now - msgTime > ms) await dbDelete('messages', msg.id);
+          }
+        }
       }
     }
   } catch(e) { /* ignore */ }
@@ -4962,6 +5075,10 @@ function showProfileScreen() {
 
 // Start
 init();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
 </script>
 
 <!-- Single-view modal overlay -->
@@ -4969,6 +5086,19 @@ init();
   <div style="background:var(--cb-surface2);border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow:auto;position:relative">
     <button onclick="closeSvModal()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.4rem;color:var(--bs-secondary-color);cursor:pointer">✕</button>
     <div id="sv-modal-content"></div>
+  </div>
+</div>
+
+<!-- Image preview modal overlay -->
+<div id="img-preview-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1060;align-items:center;justify-content:center">
+  <div style="background:var(--cb-surface2);border-radius:12px;padding:20px;max-width:600px;width:90%;position:relative">
+    <button onclick="cancelImgPreview()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.4rem;color:var(--bs-secondary-color);cursor:pointer">✕</button>
+    <img id="img-preview-thumb" style="max-width:100%;border-radius:8px;display:block;margin-bottom:12px">
+    <textarea id="img-caption-input" class="form-control form-control-sm" rows="2" placeholder="Add a caption… (optional)" style="margin-bottom:12px;resize:none"></textarea>
+    <div class="d-flex gap-2 justify-content-end">
+      <button class="btn btn-sm btn-outline-secondary" onclick="cancelImgPreview()">Cancel</button>
+      <button class="btn btn-sm btn-cb-primary" onclick="confirmImgSend()">Send</button>
+    </div>
   </div>
 </div>
 
