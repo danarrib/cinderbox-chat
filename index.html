@@ -410,6 +410,7 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
         <div id="chat-room-name" class="fw-semibold text-truncate"></div>
         <div id="chat-participant-count" class="text-muted" style="font-size:.75rem"></div>
       </div>
+      <span id="sync-dot" title="Sync status" style="font-size:.65rem;cursor:default;flex-shrink:0">●</span>
       <button class="btn btn-sm btn-outline-secondary" id="btn-settings" title="Room settings">⚙</button>
     </div>
     <div id="chat-messages"></div>
@@ -4646,17 +4647,47 @@ async function doSync() {
     if (needsMessageRender && currentRoomId) await renderMessages(currentRoomId);
     if (needsRoomListRender) await renderRoomList();
 
+    updateSyncDot(true);
   } catch(e) {
     dbg(`Sync ERROR:`, e.message, e);
+    updateSyncDot(false, e.message);
     // Keep outbox intact
   } finally {
     isSyncing = false;
   }
 }
 
+let _lastSyncAt = null;
+let _lastSyncError = null;
+function updateSyncDot(ok, errMsg) {
+  _lastSyncAt = Date.now();
+  _lastSyncError = ok ? null : (errMsg || 'error');
+  refreshSyncDot();
+}
+function refreshSyncDot() {
+  const dot = document.getElementById('sync-dot');
+  if (!dot) return;
+  const age = _lastSyncAt ? Math.round((Date.now() - _lastSyncAt) / 1000) : null;
+  let color, label;
+  if (_lastSyncError) {
+    color = '#dc3545'; label = `Sync error: ${_lastSyncError}`;
+  } else if (age === null) {
+    color = '#6c757d'; label = 'Not synced yet';
+  } else if (age <= 12) {
+    color = '#28a745'; label = `Synced ${age}s ago`;
+  } else if (age <= 30) {
+    color = '#ffc107'; label = `Last sync ${age}s ago`;
+  } else {
+    color = '#dc3545'; label = `No sync for ${age}s`;
+  }
+  dot.style.color = color;
+  dot.title = label;
+}
+
 function startSync() {
   if (syncTimer) clearInterval(syncTimer);
   syncTimer = setInterval(doSync, SYNC_INTERVAL);
+  setInterval(refreshSyncDot, 1000);
   doSync(); // immediate
 }
 
