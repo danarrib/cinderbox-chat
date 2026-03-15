@@ -13,14 +13,14 @@ A public instance is available at **[cc.outros.net](https://cc.outros.net)** —
 ## Features
 
 ### Messaging
-- **Text, image, and audio messages** — send text, photos, and voice clips up to 20 seconds
+- **Text, image, and audio messages** — send text, photos, and voice clips up to 2 minutes
 - **Message replies** — reply to any specific message; a quoted snippet appears inline and clicking it scrolls to the original
 - **Single-view messages** — content that can only be opened once; the recipient must be online to open it, and it is permanently wiped from their device after viewing
 - **Message deletion** — delete a message for yourself only, or request deletion from all recipients' devices and track confirmation per recipient
 
 ### Rooms
 - **No accounts** — identify yourself with a handle and a password, nothing more
-- **Ephemeral rooms** — choose a retention period (1h, 6h, 12h, 24h); rooms and all their messages are automatically purged
+- **Ephemeral rooms** — choose a retention period (1h, 6h, 12h, 24h) or create a permanent room; ephemeral rooms and all their messages are automatically purged
 - **Custom room names and avatars** — names stay on your device only, never stored on the server
 - **Multiple rooms** — manage several conversations simultaneously from a single interface
 
@@ -35,6 +35,7 @@ A public instance is available at **[cc.outros.net](https://cc.outros.net)** —
 
 ### UI
 - **Dark and light themes** — persisted per device
+- **Internationalisation** — English and Brazilian Portuguese (pt-BR); language selector in the nav bar
 - **5-state delivery ticks** — 🕐 queued → ✓ server received → ✓✓ downloaded → ✓✓ (partial) viewed → ✓✓ all viewed
 - **Message Info modal** — tap any outgoing message to see per-recipient delivery, view, and deletion status
 - **Context menu** — right-click or long-press any message to reply, delete, or view message data

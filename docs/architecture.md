@@ -110,6 +110,7 @@ All keys are prefixed `cc_`. Values are read on every page load; there is no in-
 | `cc_profiles` | JSON object | Map of `sender_tag → {handle, avatar}`. Populated from received `profile_update` messages. |
 | `cc_outbox_map` | JSON object | Map of `outbox_item_id → original_message_id`. Persisted across page loads so ACKs received in a future session can update the correct message record. |
 | `cc_theme` | String | `"dark"` or `"light"`. Read immediately on page load (before the DOM is fully parsed) to avoid a flash of unstyled content. |
+| `cc_lang` | String | Active UI locale: `"en"` or `"pt-BR"`. Read by `applyI18n()` on every language change and on startup. Defaults to `"en"` if absent. |
 | `cc_debug` | String or absent | Set to `"1"` to enable verbose `[cbx]` console logging. Absent by default. |
 
 **Room object structure (inside `cc_rooms` array):**

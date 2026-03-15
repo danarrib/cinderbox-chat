@@ -42,6 +42,7 @@ Your handle is stored on your device only. Other participants learn your handle 
 | 12 Hours | Messages vanish 12 hours after being sent |
 | 24 Hours (default) | Messages vanish 24 hours after being sent |
 | Single-View | Each message can only be opened once; content is wiped after viewing |
+| Permanent | Messages are never automatically expired; room persists until the owner deletes it |
 
 3. Tap **Create Room**.
 
@@ -84,7 +85,7 @@ Tap the camera button (next to the text box). Select a photo from your device.
 
 ### Audio Clips
 
-Tap the microphone button to start recording. Tap again (or wait — there's a 20-second limit) to stop. A preview allows you to listen before sending. Tap **Send** to send or discard to cancel.
+Tap the microphone button to start recording. Tap again (or wait — there's a 2-minute limit) to stop. A preview allows you to listen before sending. Tap **Send** to send or discard to cancel.
 
 ### Single-View Messages
 

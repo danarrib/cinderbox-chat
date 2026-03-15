@@ -195,6 +195,18 @@ Entries accumulate over time. The map is seeded into memory on each sync from th
 
 ---
 
+### `cc_lang`
+
+| Property | Value |
+|----------|-------|
+| Type | String: `"en"` or `"pt-BR"` |
+| Example | `"pt-BR"` |
+| Written | When the user selects a language from the nav bar language selector. |
+| Read | On startup and whenever `applyI18n()` is called to translate the UI. Defaults to `"en"` if absent. |
+| Deleted | On "clear all data". Reverts to `"en"` on next load. |
+
+---
+
 ### `cc_theme`
 
 | Property | Value |
