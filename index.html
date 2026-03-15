@@ -184,6 +184,8 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
   transition: transform .25s ease;
   display: flex; flex-direction: column;
   padding: 1rem;
+  padding-top: calc(1rem + env(safe-area-inset-top));
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   overflow-y: auto;
 }
 #settings-panel.open { transform: translateX(0); }
@@ -210,7 +212,7 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
 
 /* Mobile */
 @media (max-width: 767.98px) {
-  #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 200; transform: translateX(-100%); transition: transform .25s; width: 260px !important; min-width: 260px !important; }
+  #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 200; transform: translateX(-100%); transition: transform .25s; width: 260px !important; min-width: 260px !important; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
   #sidebar.mobile-open { transform: translateX(0); }
   #participants-panel { display: none !important; }
   #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; }
