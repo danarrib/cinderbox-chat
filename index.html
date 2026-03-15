@@ -2,7 +2,7 @@
 <html lang="en" data-bs-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f1923">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -42,8 +42,8 @@
   --cb-accent: #0969da;
   --cb-danger: #cf222e;
 }
-html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-#app { height: 100%; display: flex; flex-direction: column; }
+html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(--cb-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+#app { height: 100%; height: 100dvh; display: flex; flex-direction: column; }
 #main-navbar { flex-shrink: 0; background: var(--cb-surface); border-bottom: 1px solid var(--cb-border); position: relative; }
 #nav-avatar-btn { cursor: pointer; border-radius: 50%; }
 #nav-avatar-btn:hover { opacity: .85; }
@@ -106,8 +106,10 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
   background: var(--cb-surface);
   border-top: 1px solid var(--cb-border);
   padding: .75rem 1rem;
+  padding-bottom: calc(.75rem + env(safe-area-inset-bottom));
   display: flex; gap: .5rem; align-items: flex-end;
 }
+#btn-settings { margin-left: auto; }
 #chat-inputbar textarea {
   resize: none;
   max-height: 120px;
@@ -402,8 +404,8 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
     <div id="chat-topbar">
       <button class="btn btn-sm btn-outline-secondary me-1" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
       <div id="chat-room-avatar"></div>
-      <div class="flex-1">
-        <div id="chat-room-name" class="fw-semibold"></div>
+      <div class="flex-1" style="cursor:pointer;min-width:0" onclick="openSettings()">
+        <div id="chat-room-name" class="fw-semibold text-truncate"></div>
         <div id="chat-participant-count" class="text-muted" style="font-size:.75rem"></div>
       </div>
       <button class="btn btn-sm btn-outline-secondary" id="btn-settings" title="Room settings">⚙</button>
@@ -463,6 +465,10 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
     </div>
     <div class="form-text text-muted" data-i18n="settings.broadcasts">Broadcasts to all participants.</div>
   </div>
+  <div class="mb-3" id="settings-participants-section">
+    <label class="form-label" data-i18n="participants.label">Participants</label>
+    <div id="settings-participants-list"></div>
+  </div>
   <hr style="border-color:var(--cb-border)">
   <div class="mb-2" id="settings-leave-section">
     <button class="btn btn-sm btn-outline-warning w-100" onclick="leaveRoom()" data-i18n="btn.leave">Leave Room</button>
@@ -484,6 +490,14 @@ html, body { height: 100%; background: var(--cb-bg); color: var(--cb-text); font
     </div>
     <div id="ack-modal-content"></div>
   </div>
+</div>
+
+<!-- Profile tap modal -->
+<div id="profile-tap-overlay" onclick="closeProfileTap()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.5)"></div>
+<div id="profile-tap-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3001;background:var(--cb-surface);border:1px solid var(--cb-border);border-radius:12px;padding:1.5rem;min-width:180px;text-align:center">
+  <div id="profile-tap-avatar" style="width:80px;height:80px;border-radius:50%;margin:0 auto .75rem;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff"></div>
+  <div id="profile-tap-handle" style="font-size:1.05rem;font-weight:600;word-break:break-word"></div>
+  <button class="btn btn-sm btn-outline-secondary mt-3" onclick="closeProfileTap()" data-i18n="modal.close">✕</button>
 </div>
 
 <!-- Toast area -->
@@ -3293,12 +3307,13 @@ function avatarHtml(senderTag) {
   const profiles = getProfiles();
   const p = profiles[senderTag];
   const handle = p ? p.handle : '?';
+  const click = `onclick="openProfileTap('${senderTag}')" style="cursor:pointer"`;
   if (p && p.avatar) {
-    return `<div class="msg-avatar"><img src="${p.avatar}" alt="${escHtml(handle)}"></div>`;
+    return `<div class="msg-avatar" ${click}><img src="${p.avatar}" alt="${escHtml(handle)}"></div>`;
   }
   const initials = handle.slice(0,2).toUpperCase();
   const bg = avatarCss(handle);
-  return `<div class="msg-avatar" style="background:${bg}">${escHtml(initials)}</div>`;
+  return `<div class="msg-avatar" ${click} style="cursor:pointer;background:${bg}">${escHtml(initials)}</div>`;
 }
 
 function escHtml(s) {
@@ -3445,12 +3460,40 @@ function openSettings() {
   document.getElementById('settings-delete-section').classList.toggle('d-none', !isOwner);
   document.getElementById('settings-leave-section').classList.toggle('d-none', isOwner);
 
+  const spList = document.getElementById('settings-participants-list');
+  spList.innerHTML = '';
+  for (const el of buildParticipantItems(currentRoomId)) spList.appendChild(el);
+
   document.getElementById('settings-overlay').classList.add('open');
   document.getElementById('settings-panel').classList.add('open');
 }
 function closeSettings() {
   document.getElementById('settings-overlay').classList.remove('open');
   document.getElementById('settings-panel').classList.remove('open');
+}
+function openProfileTap(senderTag) {
+  const profiles = getProfiles();
+  const p = profiles[senderTag];
+  const handle = p ? p.handle : senderTag.slice(0,8) + '…';
+  const avatarEl = document.getElementById('profile-tap-avatar');
+  avatarEl.innerHTML = '';
+  if (p && p.avatar) {
+    const img = document.createElement('img');
+    img.src = p.avatar;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+    avatarEl.appendChild(img);
+    avatarEl.style.background = '';
+  } else {
+    avatarEl.textContent = handle.slice(0,2).toUpperCase();
+    avatarEl.style.background = avatarCss(handle);
+  }
+  document.getElementById('profile-tap-handle').textContent = handle;
+  document.getElementById('profile-tap-overlay').style.display = 'block';
+  document.getElementById('profile-tap-modal').style.display = 'block';
+}
+function closeProfileTap() {
+  document.getElementById('profile-tap-overlay').style.display = 'none';
+  document.getElementById('profile-tap-modal').style.display = 'none';
 }
 function copyRoomUrl() {
   const url = document.getElementById('settings-room-url').value;
@@ -3575,15 +3618,13 @@ function updateChatTopbar() {
 }
 
 /* ── Participants panel ───────────────────────────────────────────────────── */
-function renderParticipants(roomId) {
-  const listEl = document.getElementById('participants-list');
-  listEl.innerHTML = '';
+function buildParticipantItems(roomId) {
   const pres = presenceMap[roomId] || [];
   const profiles = getProfiles();
   const room = getRoomById(roomId);
-  if (!room) return;
+  const items = [];
+  if (!room) return items;
 
-  // Include self
   const handle = getHandle();
   const avatar = getAvatar();
   const selfEl = document.createElement('div');
@@ -3595,7 +3636,7 @@ function renderParticipants(roomId) {
     avatarHtml2 = `<div class="participant-avatar" style="background:${avatarCss(handle)}">${escHtml(handle.slice(0,2).toUpperCase())}</div>`;
   }
   selfEl.innerHTML = `${avatarHtml2}<span class="small">${escHtml(handle)} <span class="text-muted">(you)</span></span>`;
-  listEl.appendChild(selfEl);
+  items.push(selfEl);
 
   for (const tag of pres) {
     if (tag === room._myTag) continue;
@@ -3603,6 +3644,8 @@ function renderParticipants(roomId) {
     const ph = p ? p.handle : tag.slice(0,8) + '…';
     const el = document.createElement('div');
     el.className = 'participant-item';
+    el.style.cursor = 'pointer';
+    el.onclick = () => openProfileTap(tag);
     let avHtml;
     if (p && p.avatar) {
       avHtml = `<div class="participant-avatar"><img src="${p.avatar}" alt=""></div>`;
@@ -3610,8 +3653,15 @@ function renderParticipants(roomId) {
       avHtml = `<div class="participant-avatar" style="background:${avatarCss(ph)}">${escHtml(ph.slice(0,2).toUpperCase())}</div>`;
     }
     el.innerHTML = `${avHtml}<span class="small">${escHtml(ph)}</span>`;
-    listEl.appendChild(el);
+    items.push(el);
   }
+  return items;
+}
+
+function renderParticipants(roomId) {
+  const listEl = document.getElementById('participants-list');
+  listEl.innerHTML = '';
+  for (const el of buildParticipantItems(roomId)) listEl.appendChild(el);
 }
 
 /* ── Message rendering ───────────────────────────────────────────────────── */
@@ -3792,6 +3842,11 @@ function tickHtml(msg) {
   const viewedAcks    = acks.filter(a => a.type === 'ack_viewed');
   const receivedAcks  = acks.filter(a => a.type === 'ack_received');
   const serverSynced  = acks.some(a => a.type === 'ack_delivered' && a.sender_tag === SERVER_ACK_TAG);
+
+  // No recipients (solo room) — treat as all viewed immediately
+  if (recipientTags.length === 0 && msg.status === 'delivered') {
+    return ` <span class="tick viewed">✓✓</span>`;
+  }
 
   // All recipients viewed
   if (viewedAcks.length > 0 && recipientTags.length > 0 &&
@@ -5327,7 +5382,10 @@ function setupEventListeners() {
       canvas.width = 128; canvas.height = 128;
       canvas.style.display = 'block';
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, 128, 128);
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 128, 128);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
       document.getElementById('avatar-preview').src = dataUrl;
       canvas.style.display = 'none';
@@ -5382,10 +5440,18 @@ function setupEventListeners() {
       closeLightbox();
       closeAckModal();
       closeCtxMenu();
+      closeProfileTap();
     }
   });
   // Initialize btn-action state
   updateActionButton();
+
+  // Mobile keyboard: shrink app to the visual viewport so keyboard doesn't overlap
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      document.getElementById('app').style.height = Math.round(window.visualViewport.height) + 'px';
+    });
+  }
 }
 
 async function sendCurrentMessage() {
