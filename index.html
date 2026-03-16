@@ -5534,6 +5534,11 @@ init();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
+  // When a new SW activates and claims this tab, reload to get fresh HTML/JS
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!swRefreshing) { swRefreshing = true; location.reload(); }
+  });
 }
 </script>
 
