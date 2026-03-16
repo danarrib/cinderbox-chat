@@ -3646,14 +3646,6 @@ function updateChatTopbar() {
   document.getElementById('chat-participant-count').textContent =
     pres.length === 0 ? t('participants.only_you') : t('participants.count').replace('{n}', pres.length + 1);
 
-  // Hide participants panel for single-view rooms
-  const room = getRoomById(currentRoomId);
-  const ppanel = document.getElementById('participants-panel');
-  if (room && room.retention == 4) {
-    ppanel.style.display = 'none';
-  } else {
-    ppanel.style.display = '';
-  }
 }
 
 /* ── Participants panel ───────────────────────────────────────────────────── */
