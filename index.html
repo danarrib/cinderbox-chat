@@ -3234,9 +3234,9 @@ function fmtTime(d) {
   if (!(d instanceof Date)) d = new Date(d);
   return d.toLocaleTimeString(currentLang || undefined, {hour:'2-digit',minute:'2-digit',hour12: currentLang === 'en'});
 }
-function fmtLastSeen(isoStr) {
-  if (!isoStr) return '';
-  const secs = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+function fmtLastSeen(epochSecs) {
+  if (!epochSecs) return '';
+  const secs = Math.floor((Date.now() - epochSecs * 1000) / 1000);
   if (secs < 15)  return t('presence.just_now');
   if (secs < 60)  return t('presence.seconds_ago').replace('{n}', secs);
   const mins = Math.floor(secs / 60);
