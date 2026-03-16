@@ -3234,6 +3234,12 @@ function fmtTime(d) {
   if (!(d instanceof Date)) d = new Date(d);
   return d.toLocaleTimeString(currentLang || undefined, {hour:'2-digit',minute:'2-digit',hour12: currentLang === 'en'});
 }
+setInterval(() => {
+  document.querySelectorAll('[data-last-seen]').forEach(el => {
+    el.textContent = fmtLastSeen(+el.dataset.lastSeen);
+  });
+}, 1000);
+
 function fmtLastSeen(epochSecs) {
   if (!epochSecs) return '';
   const secs = Math.floor((Date.now() - epochSecs * 1000) / 1000);
@@ -3685,7 +3691,7 @@ function buildParticipantItems(roomId) {
       avHtml = `<div class="participant-avatar" style="background:${avatarCss(ph)}">${escHtml(ph.slice(0,2).toUpperCase())}</div>`;
     }
     const ls = presenceLastSeen[roomId] && presenceLastSeen[roomId][tag];
-    const lsHtml = ls ? `<span class="text-muted" style="font-size:.7rem;margin-left:auto">${fmtLastSeen(ls)}</span>` : '';
+    const lsHtml = ls ? `<span class="text-muted" style="font-size:.7rem;margin-left:auto" data-last-seen="${ls}">${fmtLastSeen(ls)}</span>` : '';
     el.innerHTML = `${avHtml}<span class="small">${escHtml(ph)}</span>${lsHtml}`;
     items.push(el);
   }
