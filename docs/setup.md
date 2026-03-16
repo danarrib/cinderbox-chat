@@ -90,9 +90,30 @@ To deploy an update:
 scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_html/
 ```
 
-No other steps are required. Any new database migrations run automatically on the first request after the new `api.php` is in place.
+Any new database migrations run automatically on the first request after the new `api.php` is in place.
 
 `config.php` is never overwritten by this process — it is not included in the deployment and its path is excluded from git via `.gitignore`.
+
+### Bumping the Service Worker version
+
+**Every deploy that changes `index.html` requires a Service Worker version bump.** Open `sw.js` and increment the `CACHE` constant before uploading:
+
+```js
+// Before
+const CACHE = 'cinderbox-v2';
+
+// After
+const CACHE = 'cinderbox-v3';
+```
+
+**Why this is required:** The browser only installs a new Service Worker when the `sw.js` file content changes. Without a bump, the browser sees an unchanged `sw.js`, skips the update, and users on Android/iOS PWA continue running the old cached version indefinitely.
+
+**What happens when you do bump it:**
+1. The browser detects `sw.js` changed and installs the new SW in the background.
+2. `skipWaiting()` causes the new SW to activate immediately.
+3. `clients.claim()` takes control of all open tabs, firing a `controllerchange` event.
+4. The `controllerchange` listener in `index.html` calls `location.reload()` on each tab.
+5. The reload fetches fresh HTML/JS from the network — all clients are now on the new version.
 
 ---
 

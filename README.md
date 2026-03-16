@@ -69,10 +69,12 @@ That's all. No build step, no package manager, no environment variables.
 ### Deploying Updates
 
 ```bash
-scp api.php index.html user@yourhost.com:~/public_html/
+scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_html/
 ```
 
 Any new database migrations run automatically on the first request after deployment.
+
+**Important — bump the Service Worker version on every deploy** that changes `index.html`. Open `sw.js` and increment the cache name (`cinderbox-v2` → `cinderbox-v3`, etc.) before uploading. This triggers an automatic update cycle: the new SW activates immediately and all open tabs reload with the fresh version. Without this step, users on Android/iOS PWA may continue running the old version indefinitely.
 
 ---
 
