@@ -50,14 +50,11 @@ Two DELETE statements run per call:
 | 1 | 6 HOUR | Messages and presence older than 6 hours are deleted |
 | 2 | 24 HOUR | Messages and presence older than 24 hours are deleted |
 | 3 | 12 HOUR | Messages and presence older than 12 hours are deleted |
-| 4 | 24 HOUR | Messages and presence older than 24 hours are deleted (single-view rooms) |
 | 5 | — | **Skipped entirely** — permanent rooms are never expired by lazy_expiry |
 
 ### Known gaps and edge cases
 
 - **Only triggered by sync activity.** If no client syncs a room, lazy_expiry never runs for it. Expired messages accumulate in `messages` until someone syncs. Global expiry (see below) catches the room at the 7-day abandoned threshold, but messages within active-but-unsynced rooms can linger past their retention period until the next sync.
-
-- **Single-view rooms use 24 HOUR as the cleanup interval** (same as retention = 2). This is the stated 24-hour maximum for single-view message lifetime. In practice, single-view message content is pulled from the server as soon as a recipient syncs (inbox fetch deletes the row immediately), so the 24-hour lazy_expiry is a backstop for unconsumed single-view messages.
 
 - **Presence cleanup uses the same interval as message cleanup.** This is a reasonable heuristic — a participant who hasn't synced in longer than the room's retention period is effectively gone — but it means presence rows can be deleted slightly before the participant would actually be considered gone in a strict sense.
 
@@ -182,7 +179,7 @@ When a sync request includes `"leave": true` for a room.
 $is_leaving = !empty($room_req['leave']);
 if ($is_leaving) {
     $pdo->prepare("DELETE FROM presence WHERE room_id = ? AND sender_tag = ?")->execute([$room_id, $sender_tag]);
-} elseif ($retention !== 4) {
+} else {
     $pres_stmt = $pdo->prepare(
         "INSERT INTO presence (room_id, sender_tag, updated_at) VALUES (?, ?, NOW())
          ON DUPLICATE KEY UPDATE updated_at = NOW()"
@@ -191,15 +188,11 @@ if ($is_leaving) {
 }
 ```
 
-On leave, the row is deleted. Otherwise (and for non-single-view rooms), the row is upserted.
-
-Single-view rooms (retention = 4) never upsert presence — the `elseif` condition explicitly skips them.
+On leave, the row is deleted. Otherwise, the row is upserted.
 
 ### Known gaps and edge cases
 
 - **Leave message may not be delivered if the client crashes.** The leave flag is set by the client (`leavingRooms.has(room.id)`). If the client crashes before sending the leave sync, the presence row is never deleted. The row will eventually expire via lazy_expiry when the presence `updated_at` ages past the retention interval.
-
-- **Presence rows for single-view rooms are created and cleaned up normally.** The 24-hour retention interval applies (`lazy_expiry` uses the same interval as retention = 2). Presence is needed in single-view rooms to route messages to recipients — without it, nobody can discover other participants and message delivery is impossible.
 
 ---
 
@@ -213,7 +206,7 @@ On app startup, the client runs a local expiry pass:
 // Client-side expiry cleanup at startup
 const retentionMs = [3600000, 21600000, 86400000, 43200000]; // 1h, 6h, 24h, 12h
 for (const room of allRooms) {
-    if (room.retention === 4 || room.retention === 5) continue;
+    if (room.retention === 5) continue; // permanent rooms have no expiry
     const ms = retentionMs[room.retention] ?? 86400000;
     const joined = new Date(room.joinedAt).getTime();
     if (now - joined > ms * 2) {

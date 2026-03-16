@@ -80,6 +80,7 @@ The migration system runs on every request (not just setup). When you deploy a n
 | 2 | Adds `encryption_test` column to `rooms` |
 | 3 | Widens `messages.ciphertext` from TEXT to MEDIUMTEXT (supports larger messages) |
 | 4 | Adds index on `rooms.last_used_at` to speed up abandoned-room expiry query |
+| 5 | Adds `sv_only` column to `rooms` (single-view only mode flag) |
 
 ---
 
@@ -101,10 +102,10 @@ Any new database migrations run automatically on the first request after the new
 
 ```js
 // Before
-const CACHE = 'cinderbox-v2';
+const CACHE = 'cinderbox-v3';
 
 // After
-const CACHE = 'cinderbox-v3';
+const CACHE = 'cinderbox-v4';
 ```
 
 **Why this is required:** The browser only installs a new Service Worker when the `sw.js` file content changes. Without a bump, the browser sees an unchanged `sw.js`, skips the update, and users on Android/iOS PWA continue running the old cached version indefinitely.

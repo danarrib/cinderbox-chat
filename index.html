@@ -297,7 +297,8 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
     <div class="logo-text mb-2">Cinderbox<span class="logo-dot">.</span></div>
     <p class="text-muted mb-4" data-i18n="landing.tagline">Ephemeral encrypted chat. No accounts. No traces.</p>
     <button class="btn btn-cb-primary btn-lg w-100 mb-3" id="btn-create" data-i18n="btn.create_room">Create Room</button>
-    <button class="btn btn-outline-secondary btn-lg w-100" id="btn-join" data-i18n="btn.join_room">Join Room</button>
+    <button class="btn btn-outline-secondary btn-lg w-100 mb-3" id="btn-join" data-i18n="btn.join_room">Join Room</button>
+    <button class="btn btn-outline-secondary btn-lg w-100 d-none" id="btn-dismiss-landing" data-i18n="btn.dismiss">Dismiss</button>
   </div>
 </div>
 
@@ -349,9 +350,13 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
           <option value="1" data-i18n="retention.6h">6 hours</option>
           <option value="2" selected data-i18n="retention.24h">24 hours (default)</option>
           <option value="3" data-i18n="retention.12h">12 hours</option>
-          <option value="4" data-i18n="retention.single_view">Single-view</option>
           <option value="5" data-i18n="retention.permanent">Permanent</option>
         </select>
+      </div>
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="create-sv-only">
+        <label class="form-check-label" for="create-sv-only" data-i18n="create.sv_only_label">Single-view only</label>
+        <div class="form-text text-muted" data-i18n="create.sv_only_desc">Every message in this room will be single-view.</div>
       </div>
       <div id="create-error" class="alert alert-danger py-2 small d-none"></div>
       <button type="submit" class="btn btn-cb-primary w-100" id="create-btn" data-i18n="btn.create_room">Create Room</button>
@@ -420,11 +425,11 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
       <button class="btn btn-sm btn-outline-secondary" onclick="cancelRecording()" data-i18n="rec.cancel">Cancel</button>
     </div>
     <div id="chat-inputbar">
-      <button class="btn btn-outline-secondary" id="btn-attach" data-i18n-title="btn.attach_image" title="Attach image" style="width:32px;height:32px;padding:0">📸</button>
+      <button class="btn btn-outline-secondary" id="btn-attach" data-i18n-title="btn.attach_image" title="Attach image" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
       <input type="file" id="image-file" accept="image/*" class="d-none">
       <textarea id="msg-input" class="form-control form-control-sm" rows="1" placeholder="Type a message…" style="flex:1" data-i18n-placeholder="placeholder.message"></textarea>
-      <button id="btn-sv" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" data-i18n-title="btn.single_view_title" title="Single-view" onclick="toggleSvButton()">💣</button>
-      <button id="btn-action" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0" data-i18n-title="btn.record_audio" title="Record audio">🎙</button>
+      <button id="btn-sv" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center" data-i18n-title="btn.single_view_title" title="Single-view" onclick="toggleSvButton()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></button>
+      <button id="btn-action" class="btn btn-sm btn-outline-secondary" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center" data-i18n-title="btn.record_audio" title="Record audio"><svg id="btn-action-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
     </div>
   </div>
 
@@ -459,6 +464,11 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
     <label class="form-label" data-i18n="participants.label">Participants</label>
     <div id="settings-participants-list"></div>
   </div>
+  <div class="mb-3">
+    <label class="form-label" data-i18n="settings.retention_label">Message Retention</label>
+    <div id="settings-retention-value" class="text-muted small"></div>
+    <div id="settings-sv-only-value" class="text-muted small mt-1" style="display:none" data-i18n="settings.sv_only_on">Single-view only — all messages are single-view.</div>
+  </div>
   <hr style="border-color:var(--cb-border)">
   <div class="mb-2" id="settings-leave-section">
     <button class="btn btn-sm btn-outline-warning w-100" onclick="leaveRoom()" data-i18n="btn.leave">Leave Room</button>
@@ -492,6 +502,7 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
 <div id="profile-tap-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3001;background:var(--cb-surface);border:1px solid var(--cb-border);border-radius:12px;padding:1.5rem;min-width:180px;text-align:center">
   <div id="profile-tap-avatar" style="width:80px;height:80px;border-radius:50%;margin:0 auto .75rem;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff"></div>
   <div id="profile-tap-handle" style="font-size:1.05rem;font-weight:600;word-break:break-word"></div>
+  <div id="profile-tap-last-seen" style="font-size:.75rem;color:var(--cb-text-muted);margin-top:.35rem"></div>
   <button class="btn btn-sm btn-outline-secondary mt-3" onclick="closeProfileTap()" data-i18n="modal.close">✕</button>
 </div>
 
@@ -2834,6 +2845,9 @@ const STRINGS = {
     'landing.tagline': 'Ephemeral encrypted chat. No accounts. No traces.',
     'btn.create_room': 'Create Room',
     'btn.join_room': 'Join Room',
+    'btn.dismiss': 'Dismiss',
+    'duptab.msg': 'App already open in another tab',
+    'duptab.sub': 'Close the other tab to use the app here.',
     'btn.profile': 'Profile',
     'btn.send': 'Send',
     'btn.cancel': 'Cancel',
@@ -2848,8 +2862,12 @@ const STRINGS = {
     'retention.6h': '6 hours',
     'retention.12h': '12 hours',
     'retention.24h': '24 hours (default)',
-    'retention.single_view': 'Single-view',
     'retention.permanent': 'Permanent',
+    'settings.retention_label': 'Message Retention',
+    'create.sv_only_label': 'Single-view only',
+    'create.sv_only_desc': 'Every message in this room will be single-view.',
+    'settings.sv_only_on': 'Single-view only — all messages are single-view.',
+    'toast.room_expired': 'Room "{name}" was removed or expired.',
     'placeholder.message': 'Type a message…',
     'placeholder.caption': 'Add a caption… (optional)',
     'msg.single_view_sealed': 'Single-view message',
@@ -2934,6 +2952,9 @@ const STRINGS = {
     'landing.tagline': 'Chat cifrado e efêmero. Sem contas. Sem rastros.',
     'btn.create_room': 'Criar Sala',
     'btn.join_room': 'Entrar na Sala',
+    'btn.dismiss': 'Dispensar',
+    'duptab.msg': 'App já aberto em outra aba',
+    'duptab.sub': 'Feche a outra aba para usar o app aqui.',
     'btn.profile': 'Perfil',
     'btn.send': 'Enviar',
     'btn.cancel': 'Cancelar',
@@ -2948,8 +2969,12 @@ const STRINGS = {
     'retention.6h': '6 horas',
     'retention.12h': '12 horas',
     'retention.24h': '24 horas (padrão)',
-    'retention.single_view': 'Visualização única',
     'retention.permanent': 'Permanente',
+    'settings.retention_label': 'Retenção de mensagens',
+    'create.sv_only_label': 'Somente visualização única',
+    'create.sv_only_desc': 'Toda mensagem nesta sala será de visualização única.',
+    'settings.sv_only_on': 'Somente visualização única — todas as mensagens são de visualização única.',
+    'toast.room_expired': 'A sala "{name}" foi removida ou expirou.',
     'placeholder.message': 'Digite uma mensagem…',
     'placeholder.caption': 'Adicionar legenda… (opcional)',
     'msg.single_view_sealed': 'Mensagem de visualização única',
@@ -3189,7 +3214,6 @@ let knownPresenceTags = {};    // roomId → Set of tags ever seen (to detect ne
 let firstJoinRooms = new Set(); // roomIds that need a joined_room broadcast on first sync
 let leavingRooms = new Set();  // roomIds being left — signals server to delete presence row
 let unreadCounts = {};   // roomId → count
-let roomNotFound = {};   // roomId → bool
 let profileScreenReturn = 'landing';
 let replyingToMsg = null;
 let currentSvMsg = null;
@@ -3428,6 +3452,48 @@ function requestNotificationPermission() {
   }
 }
 
+function updateFavicon() {
+  const hasUnread = Object.values(unreadCounts).some(v => v > 0);
+  const link = document.querySelector("link[rel='icon']");
+  if (!link) return;
+  if (!hasUnread) {
+    link.href = 'icon.svg';
+    return;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = 32; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 32, 32);
+    ctx.beginPath();
+    ctx.arc(25, 7, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#e74c3c';
+    ctx.fill();
+    link.href = canvas.toDataURL();
+  };
+  img.src = 'icon.svg';
+}
+
+function playChime() {
+  if (document.visibilityState === 'visible') return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+    osc.onended = () => ctx.close();
+  } catch(e) { /* audio not available */ }
+}
+
 function notifyNewMessage(roomName) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return; // only notify when in background
@@ -3452,6 +3518,10 @@ function showScreen(id) {
   const el = document.getElementById('screen-' + id);
   if (el) el.classList.add('active');
   if (id === 'chat') requestNotificationPermission();
+  if (id === 'landing') {
+    const dismissBtn = document.getElementById('btn-dismiss-landing');
+    if (dismissBtn) dismissBtn.classList.toggle('d-none', getRooms().length === 0);
+  }
 }
 
 /* ── Sidebar (mobile) ─────────────────────────────────────────────────────── */
@@ -3490,6 +3560,11 @@ function openSettings() {
   spList.innerHTML = '';
   for (const el of buildParticipantItems(currentRoomId)) spList.appendChild(el);
 
+  const retentionKeys = { 0: 'retention.1h', 1: 'retention.6h', 2: 'retention.24h', 3: 'retention.12h', 5: 'retention.permanent' };
+  document.getElementById('settings-retention-value').textContent = t(retentionKeys[room ? room.retention : 2] || 'retention.24h');
+  const svOnlyEl = document.getElementById('settings-sv-only-value');
+  svOnlyEl.style.display = (room && room.sv_only) ? '' : 'none';
+
   document.getElementById('settings-overlay').classList.add('open');
   document.getElementById('settings-panel').classList.add('open');
 }
@@ -3514,6 +3589,16 @@ function openProfileTap(senderTag) {
     avatarEl.style.background = avatarCss(handle);
   }
   document.getElementById('profile-tap-handle').textContent = handle;
+  const ls = currentRoomId && presenceLastSeen[currentRoomId] && presenceLastSeen[currentRoomId][senderTag];
+  const lsEl = document.getElementById('profile-tap-last-seen');
+  if (ls) {
+    lsEl.textContent = fmtLastSeen(ls);
+    lsEl.dataset.lastSeen = ls;
+    lsEl.dataset.presenceTag = senderTag;
+    lsEl.style.display = '';
+  } else {
+    lsEl.style.display = 'none';
+  }
   document.getElementById('profile-tap-overlay').style.display = 'block';
   document.getElementById('profile-tap-modal').style.display = 'block';
 }
@@ -3540,7 +3625,6 @@ async function renderRoomList() {
   for (const room of rooms) {
     const name = getRoomDisplayName(room.id);
     const unread = unreadCounts[room.id] || 0;
-    const notFound = roomNotFound[room.id];
     const isActive = room.id === currentRoomId;
 
     const el = document.createElement('div');
@@ -3550,7 +3634,7 @@ async function renderRoomList() {
     el.innerHTML = `
       ${getRoomAvatarHtml(room.id, 40)}
       <div style="flex:1;min-width:0">
-        <div class="room-name">${escHtml(name)}${notFound ? ' <span class="text-danger" title="Room not found">⚠</span>' : ''}</div>
+        <div class="room-name">${escHtml(name)}</div>
         <div class="room-meta">
           ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
         </div>
@@ -3603,12 +3687,22 @@ function getRoomAvatarHtml(roomId, size) {
 async function switchRoom(roomId) {
   currentRoomId = roomId;
   unreadCounts[roomId] = 0;
+  updateFavicon();
 
   // Update room cache with my tag
   const room = getRoomById(roomId);
   if (room) {
     const tag = await sha256(getHandle() + roomId);
     updateRoom({ id: roomId, _myTag: tag });
+  }
+
+  // Reset sv button when switching rooms
+  svButtonActive = false;
+  const btnSv = document.getElementById('btn-sv');
+  if (btnSv) {
+    btnSv.style.display = (room && room.sv_only) ? 'none' : '';
+    btnSv.className = 'btn btn-sm btn-outline-secondary';
+    btnSv.style.cssText = (room && room.sv_only) ? 'display:none' : 'width:32px;height:32px;padding:0';
   }
 
   updateChatTopbar();
@@ -4199,7 +4293,8 @@ function cancelRecording() {
 }
 
 async function sendAudio(dataUrl) {
-  if (svButtonActive) {
+  const _svRoom = getRoomById(currentRoomId);
+  if ((_svRoom && _svRoom.sv_only) || svButtonActive) {
     svButtonActive = false;
     const btn = document.getElementById('btn-sv');
     if (btn) { btn.className = 'btn btn-sm btn-outline-secondary'; btn.style.cssText = 'width:32px;height:32px;padding:0'; }
@@ -4331,12 +4426,21 @@ async function doSync() {
     for (const rr of (data.rooms || [])) {
       const roomId = rr.room_id;
       if (rr.error === 'not_found') {
-        roomNotFound[roomId] = true;
-        needsRoomListRender = true;
+        await purgeRoomLocally(roomId);
         continue;
       }
 
-      roomNotFound[roomId] = false;
+      // Sync sv_only from server into local room object
+      if (rr.sv_only !== undefined) {
+        const storedRoom = getRoomById(roomId);
+        if (storedRoom && !!storedRoom.sv_only !== rr.sv_only) {
+          updateRoom({ id: roomId, sv_only: rr.sv_only });
+          if (roomId === currentRoomId) {
+            const btnSv = document.getElementById('btn-sv');
+            if (btnSv) btnSv.style.cssText = rr.sv_only ? 'display:none' : 'width:32px;height:32px;padding:0';
+          }
+        }
+      }
 
       // Update presence — sticky: add new tags, only remove on leave_room
       const serverPresence = rr.presence || [];
@@ -4535,6 +4639,11 @@ async function doSync() {
           dbg(`↓ ack_single_view_deleted: outbox=${parsed.message_id.slice(0,8)}… → msg=${resolvedSvId.slice(0,8)}… deleted by recipient`);
           const orig = await dbGet('messages', resolvedSvId);
           if (orig) {
+            if (!orig.acks) orig.acks = [];
+            const alreadySvDeleted = orig.acks.some(a => a.type === 'ack_single_view_deleted' && a.sender_tag === inboxItem.sender_tag);
+            if (!alreadySvDeleted) {
+              orig.acks.push({ type: 'ack_single_view_deleted', sender_tag: inboxItem.sender_tag, received_at: new Date().toISOString() });
+            }
             orig.status = 'seen_and_deleted';
             await dbPut('messages', orig);
             if (roomId === currentRoomId) needsMessageRender = true;
@@ -4660,15 +4769,17 @@ async function doSync() {
         hasNew = true;
         if (roomId === currentRoomId) needsMessageRender = true;
 
-        // Browser notification for non-silent incoming messages
+        // Browser notification + chime for non-silent incoming messages
         if (['text', 'image', 'audio', 'single_view'].includes(msgType)) {
           notifyNewMessage(getRoomDisplayName(roomId));
+          playChime();
         }
 
         // Unread count if not current room
         if (roomId !== currentRoomId) {
           unreadCounts[roomId] = (unreadCounts[roomId] || 0) + 1;
           needsRoomListRender = true;
+          updateFavicon();
         }
 
       }
@@ -4875,7 +4986,8 @@ async function handleImageFile(file) {
     reader.onload = async () => {
       const dataUrl = reader.result;
       pendingImgDataUrl = dataUrl;
-      pendingImgIsSingleView = svButtonActive;
+      const _svRoom = getRoomById(currentRoomId);
+      pendingImgIsSingleView = (_svRoom && _svRoom.sv_only) || svButtonActive;
       document.getElementById('img-preview-thumb').src = dataUrl;
       document.getElementById('img-caption-input').value = '';
       const overlay = document.getElementById('img-preview-overlay');
@@ -5001,6 +5113,33 @@ async function deleteRoom() {
 }
 
 /* ── Leave room ──────────────────────────────────────────────────────────── */
+async function purgeRoomLocally(roomId) {
+  const roomName = getRoomDisplayName(roomId);
+  const remainingRooms = getRooms().filter(r => r.id !== roomId);
+  saveRooms(remainingRooms);
+  const msgs = await getMessagesForRoom(roomId);
+  for (const m of msgs) await dbDelete('messages', m.id);
+  const outboxItems = await getOutboxForRoom(roomId);
+  for (const o of outboxItems) await dbDelete('outbox', o.id);
+  delete presenceMap[roomId];
+  delete knownPresenceTags[roomId];
+  delete presenceLastSeen[roomId];
+  showToast(t('toast.room_expired').replace('{name}', roomName), true);
+  closeSettings();
+  if (currentRoomId === roomId) {
+    currentRoomId = null;
+    if (remainingRooms.length > 0) {
+      showScreen('chat');
+      await switchRoom(remainingRooms[0].id);
+      renderRoomList();
+    } else {
+      showScreen('landing');
+    }
+  } else {
+    renderRoomList();
+  }
+}
+
 async function leaveRoom() {
   if (!currentRoomId) return;
   const room = getRoomById(currentRoomId);
@@ -5241,22 +5380,25 @@ function toggleSvButton() {
   }
 }
 
+const SVG_MIC = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+const SVG_SEND = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+
 function updateActionButton() {
   const btn = document.getElementById('btn-action');
   if (!btn) return;
   const hasText = document.getElementById('msg-input').value.trim().length > 0;
   if (hasText) {
-    btn.textContent = '📨';
+    btn.innerHTML = SVG_SEND;
     btn.className = 'btn btn-sm btn-cb-primary';
     btn.title = t('btn.send_msg');
     btn.dataset.i18nTitle = 'btn.send_msg';
   } else {
-    btn.textContent = '🎙';
+    btn.innerHTML = SVG_MIC;
     btn.className = 'btn btn-sm btn-outline-secondary';
     btn.title = t('btn.record_audio');
     btn.dataset.i18nTitle = 'btn.record_audio';
   }
-  btn.style.cssText = 'width:32px;height:32px;padding:0';
+  btn.style.cssText = 'width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center';
 }
 
 /* ── Init ─────────────────────────────────────────────────────────────────── */
@@ -5283,7 +5425,7 @@ async function init() {
     const now = Date.now();
     const retentionMs = [3600000, 21600000, 86400000, 43200000]; // 1h, 6h, 24h, 12h (indices 0-3)
     for (const room of allRooms) {
-      if (room.retention === 4 || room.retention === 5) continue; // single-view or permanent
+      if (room.retention === 5) continue; // permanent rooms have no expiry
       const ms = retentionMs[room.retention] ?? 86400000;
       const joined = new Date(room.joinedAt).getTime();
       // Use last activity if available, otherwise joinedAt
@@ -5399,6 +5541,7 @@ function setupEventListeners() {
   // Landing
   document.getElementById('btn-create').onclick = () => showScreen('create');
   document.getElementById('btn-join').onclick = () => showScreen('join');
+  document.getElementById('btn-dismiss-landing').onclick = () => { showScreen('chat'); };
 
   // Create room
   document.getElementById('btn-create-back').onclick = () => showScreen('landing');
@@ -5412,6 +5555,7 @@ function setupEventListeners() {
       const password = document.getElementById('create-password').value;
       const name = document.getElementById('create-name').value.trim();
       const retention = parseInt(document.getElementById('create-retention').value);
+      const sv_only = document.getElementById('create-sv-only').checked;
       const roomId = uuidv4();
       const deleteTokenBytes = crypto.getRandomValues(new Uint8Array(32));
       const deleteToken = Array.from(deleteTokenBytes).map(b => b.toString(16).padStart(2,'0')).join('');
@@ -5423,13 +5567,17 @@ function setupEventListeners() {
       const resp = await fetch(API + '?action=create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_id: roomId, delete_token_hash: deleteTokenHash, retention, encryption_test: encryptionTest }),
+        body: JSON.stringify({ room_id: roomId, delete_token_hash: deleteTokenHash, retention, sv_only, encryption_test: encryptionTest }),
       });
       const data = await resp.json();
       if (data.ok) {
         const rooms = getRooms();
-        rooms.push({ id: roomId, name, password, deleteToken, retention, joinedAt: new Date().toISOString() });
+        rooms.push({ id: roomId, name, password, deleteToken, retention, sv_only, joinedAt: new Date().toISOString() });
         saveRooms(rooms);
+        document.getElementById('create-password').value = '';
+        document.getElementById('create-name').value = '';
+        document.getElementById('create-retention').value = '2';
+        document.getElementById('create-sv-only').checked = false;
         showScreen('chat');
         await renderRoomList();
         await switchRoom(roomId);
@@ -5554,7 +5702,7 @@ function setupEventListeners() {
 
   // Chat
   document.getElementById('btn-settings').onclick = openSettings;
-  document.getElementById('btn-new-room-sidebar').onclick = () => { closeSidebar(); showScreen('create'); };
+  document.getElementById('btn-new-room-sidebar').onclick = () => { closeSidebar(); showScreen('landing'); };
 
   const msgInput = document.getElementById('msg-input');
   msgInput.addEventListener('keydown', e => {
@@ -5609,7 +5757,8 @@ async function sendCurrentMessage() {
   input.value = '';
   input.style.height = 'auto';
   updateActionButton();
-  if (svButtonActive) {
+  const _svRoom = getRoomById(currentRoomId);
+  if ((_svRoom && _svRoom.sv_only) || svButtonActive) {
     svButtonActive = false;
     const btn = document.getElementById('btn-sv');
     if (btn) { btn.className = 'btn btn-sm btn-outline-secondary'; btn.style.cssText = 'width:32px;height:32px;padding:0'; }
@@ -5624,6 +5773,37 @@ function showProfileScreen() {
   renderAvatarPreview();
   showScreen('profile');
 }
+
+/* ── Duplicate tab detection ─────────────────────────────────────────────── */
+(function() {
+  if (!('BroadcastChannel' in window)) return;
+  const ch = new BroadcastChannel('cinderbox_tab');
+  let isBlocked = false;
+
+  ch.onmessage = e => {
+    if (e.data === 'ping') {
+      // Another tab just opened — tell it we're already here
+      ch.postMessage('pong');
+    } else if (e.data === 'pong' && !isBlocked) {
+      // We got a pong — there's already an open tab
+      isBlocked = true;
+      if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+      const blocker = document.getElementById('duptab-blocker');
+      document.getElementById('duptab-msg').textContent = t('duptab.msg');
+      document.getElementById('duptab-sub').textContent = t('duptab.sub');
+      blocker.style.display = 'flex';
+    } else if (e.data === 'closed') {
+      // The original tab closed — reload and take over
+      location.reload();
+    }
+  };
+
+  // Announce ourselves
+  ch.postMessage('ping');
+
+  // When we close, let waiting tabs know
+  window.addEventListener('beforeunload', () => ch.postMessage('closed'));
+})();
 
 // Start
 init();
@@ -5662,6 +5842,13 @@ if ('serviceWorker' in navigator) {
 <!-- Context menu -->
 <div id="ctx-menu" style="display:none;position:fixed;z-index:9999;background:var(--cb-surface2);border:1px solid var(--cb-border);border-radius:6px;padding:4px 0;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,.4)">
   <div id="ctx-menu-items"></div>
+</div>
+
+<!-- Duplicate tab blocker -->
+<div id="duptab-blocker" style="display:none;position:fixed;inset:0;background:var(--cb-bg);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:1rem;text-align:center;padding:2rem">
+  <div style="font-size:2rem">⚠</div>
+  <div id="duptab-msg" style="font-size:1.1rem;font-weight:600"></div>
+  <div style="color:var(--bs-secondary-color);font-size:.9rem" id="duptab-sub"></div>
 </div>
 
 <!-- Lightbox overlay -->

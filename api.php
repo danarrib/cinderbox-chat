@@ -120,6 +120,7 @@ function run_migrations(PDO $pdo) {
         2 => 'migration_2',
         3 => 'migration_3',
         4 => 'migration_4',
+        5 => 'migration_5',
     ];
 
     // Ensure schema_version table exists
@@ -181,6 +182,10 @@ function migration_4(PDO $pdo) {
     $pdo->exec("ALTER TABLE rooms ADD INDEX idx_last_used_at (last_used_at)");
 }
 
+function migration_5(PDO $pdo) {
+    $pdo->exec("ALTER TABLE rooms ADD COLUMN sv_only TINYINT(1) NOT NULL DEFAULT 0");
+}
+
 function migration_3(PDO $pdo) {
     $pdo->exec("ALTER TABLE messages MODIFY ciphertext MEDIUMTEXT NOT NULL");
 }
@@ -215,6 +220,7 @@ if ($action === 'create') {
     $room_id          = trim((string)($b['room_id'] ?? ''));
     $delete_token_hash = trim((string)($b['delete_token_hash'] ?? ''));
     $retention        = isset($b['retention']) ? (int)$b['retention'] : -1;
+    $sv_only          = !empty($b['sv_only']) ? 1 : 0;
 
     if (!is_uuid4($room_id)) {
         json_out(['ok' => false, 'error' => 'Invalid room_id']);
@@ -222,7 +228,7 @@ if ($action === 'create') {
     if (!preg_match('/^[0-9a-f]{64}$/i', $delete_token_hash)) {
         json_out(['ok' => false, 'error' => 'Invalid delete_token_hash']);
     }
-    if ($retention < 0 || $retention > 5) {
+    if (!in_array($retention, [0, 1, 2, 3, 5])) {
         json_out(['ok' => false, 'error' => 'Invalid retention value']);
     }
 
@@ -236,9 +242,9 @@ if ($action === 'create') {
     $encryption_test = isset($b['encryption_test']) ? (string)$b['encryption_test'] : null;
 
     $stmt = $pdo->prepare(
-        "INSERT INTO rooms (id, delete_token, retention, encryption_test, last_used_at) VALUES (?, ?, ?, ?, NOW())"
+        "INSERT INTO rooms (id, delete_token, retention, sv_only, encryption_test, last_used_at) VALUES (?, ?, ?, ?, ?, NOW())"
     );
-    $stmt->execute([$room_id, strtolower($delete_token_hash), $retention, $encryption_test]);
+    $stmt->execute([$room_id, strtolower($delete_token_hash), $retention, $sv_only, $encryption_test]);
     json_out(['ok' => true]);
 }
 
@@ -307,7 +313,7 @@ if ($action === 'sync') {
         }
 
         // Validate room exists
-        $room_stmt = $pdo->prepare("SELECT id, retention FROM rooms WHERE id = ?");
+        $room_stmt = $pdo->prepare("SELECT id, retention, sv_only FROM rooms WHERE id = ?");
         $room_stmt->execute([$room_id]);
         $room = $room_stmt->fetch();
 
@@ -317,6 +323,7 @@ if ($action === 'sync') {
         }
 
         $retention = (int)$room['retention'];
+        $sv_only   = (bool)$room['sv_only'];
 
         // Update last_used_at
         $pdo->prepare("UPDATE rooms SET last_used_at = NOW() WHERE id = ?")->execute([$room_id]);
@@ -456,6 +463,7 @@ if ($action === 'sync') {
             'room_id'  => $room_id,
             'inbox'    => $inbox,
             'presence' => $presence,
+            'sv_only'  => $sv_only,
         ];
         if (!empty($outbox_errors)) {
             $room_response['outbox_errors'] = $outbox_errors;

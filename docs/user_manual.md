@@ -41,8 +41,9 @@ Your handle is stored on your device only. Other participants learn your handle 
 | 6 Hours | Messages vanish 6 hours after being sent |
 | 12 Hours | Messages vanish 12 hours after being sent |
 | 24 Hours (default) | Messages vanish 24 hours after being sent |
-| Single-View | Each message can only be opened once; content is wiped after viewing |
 | Permanent | Messages are never automatically expired; room persists until the owner deletes it |
+
+   - **Single-View Only** — when enabled, every message sent in this room is automatically single-view, regardless of the sender's flame toggle. The toggle is hidden for all participants.
 
 3. Tap **Create Room**.
 
@@ -89,7 +90,7 @@ Tap the microphone button to start recording. Tap again (or wait — there's a 2
 
 ### Single-View Messages
 
-Toggle the **Single-view** switch (the 💣 icon) before sending any message to make it a single-view message. The recipient can open it exactly once — after viewing, the content is permanently deleted from their device.
+Toggle the **Single-view** switch (the flame icon) before sending any message to make it a single-view message. The recipient can open it exactly once — after viewing, the content is permanently deleted from their device.
 
 **How opening works:** When the recipient taps a single-view message, the app must complete a successful sync with the server before displaying the content. This prevents the content from being revealed while offline. If there's no network connection, the message stays sealed.
 
@@ -173,6 +174,10 @@ Changes take effect immediately and are broadcast to room participants on the ne
 When the app is in the background, Cinderbox Chat can send browser notifications for new messages. The notification shows only the room name — no message content.
 
 To enable notifications: tap your avatar → your browser should prompt for permission the first time. If it didn't, check your browser's notification settings for this site.
+
+A short audio chime also plays when a new message arrives while the app is not in focus. The chime is silent while you are actively using the app.
+
+The browser tab icon shows a small red dot when there are unread messages in any room. The dot clears when you switch to that room.
 
 ---
 

@@ -122,6 +122,7 @@ All keys are prefixed `cc_`. Values are read on every page load; there is no in-
   "password": "the room password",
   "deleteToken": "<64-char hex>",
   "retention": 2,
+  "sv_only": false,
   "joinedAt": "2026-03-15T10:00:00.000Z"
 }
 ```
@@ -197,10 +198,6 @@ Three additional in-memory structures support the presence model:
 - `firstJoinRooms` (Set of roomIds) — marks rooms where the client should broadcast a `joined_room` message on the first sync after joining.
 - `presenceLastSeen` (`roomId → {tag → ISO timestamp}`) — stores the `updated_at` timestamp returned by the server for each presence entry. Used to display "last seen" relative times in the participants list.
 
-### Presence in single-view rooms
-
-Presence is disabled for single-view rooms (retention = 4). The server does not upsert presence for these rooms, and the client does not include them in the outgoing presence.
-
 ---
 
 ## outboxMsgMap: The Two-ID Problem
@@ -262,10 +259,33 @@ ACK entries are stored as an array on the message object in IndexedDB:
 
 ## Service Worker and PWA
 
-`sw.js` registers a cache named `cinderbox-v2` containing only the HTML shell (`./`). On a navigation request, it attempts a network fetch first and falls back to the cached shell only if the network is unavailable. All non-navigation requests (API calls) bypass the service worker entirely.
+`sw.js` registers a cache named `cinderbox-v3` containing only the HTML shell (`./`). On a navigation request, it attempts a network fetch first and falls back to the cached shell only if the network is unavailable. All non-navigation requests (API calls) bypass the service worker entirely.
 
-On activation, the service worker deletes any caches with names other than `cinderbox-v2`, ensuring stale caches from previous versions are purged.
+On activation, the service worker deletes any caches with names other than `cinderbox-v3`, ensuring stale caches from previous versions are purged.
 
 The PWA manifest (`manifest.json`) enables installation as a standalone app with a dark background (`#0f1923`) and portrait-primary orientation.
 
 The Service Worker requires HTTPS to function. On HTTP origins, the app works but is not installable and has no offline shell fallback.
+
+---
+
+## Duplicate Tab Detection
+
+On startup, the client uses a `BroadcastChannel` named `cinderbox_tab` to detect whether another tab already has the app open:
+
+1. The new tab posts `"ping"` to the channel.
+2. Any existing tab responds with `"pong"`.
+3. If a pong is received, the new tab stops its sync loop and shows a full-screen blocker ("App already open in another tab"). All interaction is disabled.
+4. When the original tab closes, it posts `"closed"` via `beforeunload`. The blocked tab reloads and takes over.
+
+If the browser does not support `BroadcastChannel`, detection is skipped and both tabs operate normally.
+
+---
+
+## Notifications, Chime, and Favicon
+
+**Browser notifications:** When a non-silent message (`text`, `image`, `audio`, `single_view`) arrives and the app is in the background (`document.visibilityState !== 'visible'`), a browser notification is triggered via the Service Worker (or `new Notification()` as fallback). The notification body contains only the room name — no message content.
+
+**Audio chime:** The same visibility gate applies to the chime. A short descending sine tone (880 → 440 Hz, 0.5 s) is synthesised via the Web Audio API (`AudioContext`). No audio file is loaded — the tone is generated entirely in JavaScript. The chime is silent when the app is in focus.
+
+**Favicon unread dot:** When any room has unread messages, the browser tab icon is replaced with a canvas-rendered version of `icon.svg` with a red dot overlaid in the top-right corner. The dot is cleared (icon restored to `icon.svg`) when the user switches to a room, which resets that room's unread count to zero.
