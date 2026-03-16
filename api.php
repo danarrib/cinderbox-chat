@@ -119,6 +119,7 @@ function run_migrations(PDO $pdo) {
         1 => 'migration_1',
         2 => 'migration_2',
         3 => 'migration_3',
+        4 => 'migration_4',
     ];
 
     // Ensure schema_version table exists
@@ -174,6 +175,10 @@ function migration_1(PDO $pdo) {
 
 function migration_2(PDO $pdo) {
     $pdo->exec("ALTER TABLE rooms ADD COLUMN encryption_test TEXT NULL");
+}
+
+function migration_4(PDO $pdo) {
+    $pdo->exec("ALTER TABLE rooms ADD INDEX idx_last_used_at (last_used_at)");
 }
 
 function migration_3(PDO $pdo) {
@@ -496,6 +501,9 @@ function lazy_expiry(PDO $pdo, string $room_id, int $retention): void {
 }
 
 function global_expiry(PDO $pdo): void {
+    // Run on ~1% of requests — avoids a full table scan on every sync
+    if (rand(1, 100) !== 1) return;
+
     // Find abandoned rooms
     $old_rooms = $pdo->query(
         "SELECT id FROM rooms WHERE last_used_at < (NOW() - INTERVAL 7 DAY)"

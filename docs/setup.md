@@ -79,6 +79,7 @@ The migration system runs on every request (not just setup). When you deploy a n
 | 1 | Creates `rooms`, `messages`, `presence` tables |
 | 2 | Adds `encryption_test` column to `rooms` |
 | 3 | Widens `messages.ciphertext` from TEXT to MEDIUMTEXT (supports larger messages) |
+| 4 | Adds index on `rooms.last_used_at` to speed up abandoned-room expiry query |
 
 ---
 

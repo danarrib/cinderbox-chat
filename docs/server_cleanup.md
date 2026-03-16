@@ -111,7 +111,7 @@ All rooms are eligible. The 7-day threshold is independent of the room's retenti
 
 ### Known gaps and edge cases
 
-- **Runs on every sync, regardless of how many abandoned rooms exist.** The full-table scan (`SELECT id FROM rooms WHERE last_used_at < ...`) runs on every sync request. On a small deployment this is negligible; on a very large deployment with many stale rooms, this could add measurable latency to every sync response. There is no randomization or sampling.
+- **Runs on ~1% of sync requests.** `global_expiry` skips execution with a `rand(1, 100) !== 1` guard, so it runs approximately once every 100 sync calls. This avoids a full table scan on every request while still running frequently enough to purge abandoned rooms promptly (at 10 active users syncing every 5 seconds, it fires roughly every 50 seconds). The `rooms.last_used_at` column is indexed (`idx_last_used_at`, added in migration_4) so the query is fast when it does run.
 
 - **No cleanup for orphaned messages.** If a room row is deleted by `?action=delete` (owner-initiated), the delete handler explicitly removes messages and presence first:
   ```php
