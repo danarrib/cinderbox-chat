@@ -3475,8 +3475,11 @@ function updateFavicon() {
   img.src = 'icon.svg';
 }
 
-function playChime() {
-  if (document.visibilityState === 'visible') return;
+function playChime(msgRoomId) {
+  // Only suppress the chime if the app is in the foreground AND the message
+  // is in the currently active room. Background messages (different room or
+  // backgrounded app) should always chime.
+  if (document.visibilityState === 'visible' && msgRoomId === currentRoomId) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
@@ -4699,6 +4702,7 @@ async function doSync() {
             if (roomId === currentRoomId) { updateChatTopbar(); }
           }
           if (knownPresenceTags[roomId]) knownPresenceTags[roomId].delete(inboxItem.sender_tag);
+          if (presenceLastSeen[roomId]) delete presenceLastSeen[roomId][inboxItem.sender_tag];
           needsRoomListRender = true;
           continue;
         }
@@ -4772,7 +4776,7 @@ async function doSync() {
         // Browser notification + chime for non-silent incoming messages
         if (['text', 'image', 'audio', 'single_view'].includes(msgType)) {
           notifyNewMessage(getRoomDisplayName(roomId));
-          playChime();
+          playChime(roomId);
         }
 
         // Unread count if not current room
@@ -5161,7 +5165,11 @@ async function leaveRoom() {
   // Signal server to remove presence row on this sync
   leavingRooms.add(currentRoomId);
 
-  // Flush outbox so leave_room messages actually go out
+  // Flush outbox so leave_room messages actually go out.
+  // If a sync is already in progress, wait for it to finish first —
+  // doSync() returns immediately (no-op) when isSyncing is true, which
+  // would silently drop the leave signal and outbox items.
+  while (isSyncing) await new Promise(r => setTimeout(r, 100));
   await doSync();
 
   leavingRooms.delete(currentRoomId);
@@ -5176,6 +5184,7 @@ async function leaveRoom() {
   for (const o of outboxItems) await dbDelete('outbox', o.id);
   delete presenceMap[leavingId];
   delete knownPresenceTags[leavingId];
+  delete presenceLastSeen[leavingId];
 
   closeSettings();
   currentRoomId = null;
