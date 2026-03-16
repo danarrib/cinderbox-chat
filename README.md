@@ -97,6 +97,21 @@ Any new database migrations run automatically on the first request after deploym
 
 ---
 
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [User Manual](docs/user_manual.md) | End-user guide: rooms, messaging, single-view, profiles, notifications |
+| [Self-Hosting Guide](docs/setup.md) | Deployment, database setup, Service Worker versioning, reverse proxy config |
+| [Architecture](docs/architecture.md) | Sync model, storage layers, message flow, presence model, ACK system |
+| [Encryption](docs/encryption.md) | Cryptographic primitives, key derivation, threat model |
+| [Client Database](docs/client_database.md) | IndexedDB schema, localStorage keys, outbox structure |
+| [Server Cleanup](docs/server_cleanup.md) | Server-side expiry routines: lazy expiry, global expiry, inbox delivery |
+
+---
+
 ## License
 
 See [LICENSE](LICENSE).
