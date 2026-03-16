@@ -380,11 +380,11 @@ if ($action === 'sync') {
             }
         }
 
-        // Presence: remove on leave, upsert otherwise (skip for single-view rooms)
+        // Presence: remove on leave, upsert otherwise
         $is_leaving = !empty($room_req['leave']);
         if ($is_leaving) {
             $pdo->prepare("DELETE FROM presence WHERE room_id = ? AND sender_tag = ?")->execute([$room_id, $sender_tag]);
-        } elseif ($retention !== 4) {
+        } else {
             $pres_stmt = $pdo->prepare(
                 "INSERT INTO presence (room_id, sender_tag, updated_at) VALUES (?, ?, NOW())
                  ON DUPLICATE KEY UPDATE updated_at = NOW()"
@@ -439,16 +439,14 @@ if ($action === 'sync') {
 
         // Fetch presence (excluding this sender_tag)
         $presence = [];
-        if ($retention !== 4) {
-            $retention_interval = retention_interval($retention);
-            $pres_fetch = $pdo->prepare(
-                "SELECT sender_tag, UNIX_TIMESTAMP(updated_at) AS last_seen FROM presence
-                 WHERE room_id = ? AND sender_tag != ? AND updated_at > (NOW() - INTERVAL {$retention_interval})"
-            );
-            $pres_fetch->execute([$room_id, $sender_tag]);
-            foreach ($pres_fetch->fetchAll() as $pr) {
-                $presence[] = ['tag' => $pr['sender_tag'], 'last_seen' => (int)$pr['last_seen']];
-            }
+        $retention_interval = retention_interval($retention);
+        $pres_fetch = $pdo->prepare(
+            "SELECT sender_tag, UNIX_TIMESTAMP(updated_at) AS last_seen FROM presence
+             WHERE room_id = ? AND sender_tag != ? AND updated_at > (NOW() - INTERVAL {$retention_interval})"
+        );
+        $pres_fetch->execute([$room_id, $sender_tag]);
+        foreach ($pres_fetch->fetchAll() as $pr) {
+            $presence[] = ['tag' => $pr['sender_tag'], 'last_seen' => (int)$pr['last_seen']];
         }
 
         // Lazy expiry

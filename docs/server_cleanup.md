@@ -199,7 +199,7 @@ Single-view rooms (retention = 4) never upsert presence — the `elseif` conditi
 
 - **Leave message may not be delivered if the client crashes.** The leave flag is set by the client (`leavingRooms.has(room.id)`). If the client crashes before sending the leave sync, the presence row is never deleted. The row will eventually expire via lazy_expiry when the presence `updated_at` ages past the retention interval.
 
-- **Presence rows for single-view rooms are never created**, so there is nothing to clean up when leaving a single-view room. The `leave: true` DELETE would find no row and succeed silently.
+- **Presence rows for single-view rooms are created and cleaned up normally.** The 24-hour retention interval applies (`lazy_expiry` uses the same interval as retention = 2). Presence is needed in single-view rooms to route messages to recipients — without it, nobody can discover other participants and message delivery is impossible.
 
 ---
 
