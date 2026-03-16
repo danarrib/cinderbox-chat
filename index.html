@@ -5342,6 +5342,21 @@ function isValidUuid(s) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 }
 
+/* ── Hash navigation ─────────────────────────────────────────────────────── */
+window.addEventListener('hashchange', async () => {
+  const hash = window.location.hash.slice(1);
+  if (!hash || !isValidUuid(hash)) return;
+  const already = getRoomById(hash);
+  if (already) {
+    showScreen('chat');
+    await switchRoom(hash);
+    renderRoomList();
+  } else {
+    document.getElementById('join-room-id').value = hash;
+    showScreen('join');
+  }
+});
+
 /* ── Event listeners ─────────────────────────────────────────────────────── */
 function setupEventListeners() {
   // Setup form
