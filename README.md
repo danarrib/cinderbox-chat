@@ -2,7 +2,7 @@
 
 A privacy-focused ephemeral messaging platform built for self-hosting. No accounts, no phone numbers, no logs — just encrypted rooms that disappear.
 
-Cinderbox Chat was designed from the ground up to run on infrastructure you control. It deploys as two files on any standard PHP/MySQL shared host and requires no build step, no Node.js, no Docker, and no CDN.
+Cinderbox Chat was designed from the ground up to run on infrastructure you control. It deploys on any standard PHP/MySQL shared host with no build step, no Node.js, no Docker, and no CDN.
 
 | Desktop | Mobile |
 |----------|---------------|
@@ -50,7 +50,17 @@ A public instance is available at **[cc.outros.net](https://cc.outros.net)** —
 
 ## Self-Hosting
 
-Cinderbox Chat is two files: `index.html` and `api.php`. That's it.
+Cinderbox Chat deploys as a small set of static files alongside a single PHP script. There is no build step, no package manager, and no environment variables.
+
+| File | Role |
+|------|------|
+| `index.html` | Full SPA frontend — all UI and client-side logic |
+| `api.php` | Backend API — all database interactions |
+| `sw.js` | Service Worker — offline shell and PWA update cycle |
+| `manifest.json` | PWA manifest — enables "Add to Home Screen" |
+| `icon.svg` | Application icon |
+
+`index.html` and `api.php` are the only files strictly required for the app to function. The remaining three enable PWA installation and the offline fallback shell.
 
 ### Requirements
 - PHP 8.0+ with PDO and PDO_MySQL
@@ -59,9 +69,9 @@ Cinderbox Chat is two files: `index.html` and `api.php`. That's it.
 
 ### Setup
 
-1. Copy `index.html` and `api.php` to your web root:
+1. Copy the files to your web root:
    ```bash
-   scp api.php index.html user@yourhost.com:~/public_html/
+   scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_html/
    ```
 
 2. Visit your site in a browser. A setup screen will appear asking for your MySQL credentials.
@@ -78,7 +88,7 @@ scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_h
 
 Any new database migrations run automatically on the first request after deployment.
 
-**Important — bump the Service Worker version on every deploy** that changes `index.html`. Open `sw.js` and increment the cache name (`cinderbox-v2` → `cinderbox-v3`, etc.) before uploading. This triggers an automatic update cycle: the new SW activates immediately and all open tabs reload with the fresh version. Without this step, users on Android/iOS PWA may continue running the old version indefinitely.
+**Important — bump the Service Worker version on every deploy** that changes `index.html`. Open `sw.js` and increment the cache name (e.g. `cinderbox-v4` → `cinderbox-v5`) before uploading. This triggers an automatic update cycle: the new SW activates immediately and all open tabs reload with the fresh version. Without this step, users on Android/iOS PWA may continue running the old version indefinitely.
 
 ---
 
@@ -98,8 +108,6 @@ Any new database migrations run automatically on the first request after deploym
 | Message size | 2 MB hard limit enforced server-side |
 | Setup endpoint | Disabled permanently after first run (returns 403) |
 | Config file | Excluded from git via `.gitignore` |
-
----
 
 ---
 

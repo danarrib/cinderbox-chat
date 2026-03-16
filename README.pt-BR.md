@@ -2,7 +2,11 @@
 
 Uma plataforma de mensagens efêmera com foco em privacidade, desenvolvida para auto-hospedagem. Sem contas, sem números de telefone, sem registros — apenas salas criptografadas que desaparecem.
 
-O Cinderbox Chat foi desenvolvido desde o início para rodar em infraestrutura que você controla. Faz deploy como dois arquivos em qualquer hospedagem PHP/MySQL padrão, sem etapa de build, sem Node.js, sem Docker e sem CDN.
+O Cinderbox Chat foi desenvolvido desde o início para rodar em infraestrutura que você controla. Faz deploy em qualquer hospedagem PHP/MySQL padrão, sem etapa de build, sem Node.js, sem Docker e sem CDN.
+
+| Desktop | Mobile |
+|----------|---------------|
+| <img height="400" alt="image" src="https://github.com/user-attachments/assets/c18afcca-2c83-4300-a6f5-8697b3a1be73" /> | <img height="400" alt="image" src="https://github.com/user-attachments/assets/207e9f06-e054-400b-a551-b6ac0e59d3af" />
 
 ## Demo ao Vivo
 
@@ -46,7 +50,17 @@ Uma instância pública está disponível em **[cc.outros.net](https://cc.outros
 
 ## Auto-Hospedagem
 
-O Cinderbox Chat consiste em dois arquivos: `index.html` e `api.php`. É só isso.
+O Cinderbox Chat faz deploy como um pequeno conjunto de arquivos estáticos junto com um único script PHP. Sem etapa de build, sem gerenciador de pacotes e sem variáveis de ambiente.
+
+| Arquivo | Função |
+|---------|--------|
+| `index.html` | Frontend SPA completo — toda a interface e lógica do lado do cliente |
+| `api.php` | API backend — todas as interações com o banco de dados |
+| `sw.js` | Service Worker — shell offline e ciclo de atualização do PWA |
+| `manifest.json` | Manifesto PWA — habilita "Adicionar à tela inicial" |
+| `icon.svg` | Ícone do aplicativo |
+
+`index.html` e `api.php` são os únicos arquivos estritamente necessários para o funcionamento do app. Os outros três habilitam a instalação como PWA e o shell de fallback offline.
 
 ### Requisitos
 - PHP 8.0+ com PDO e PDO_MySQL
@@ -55,9 +69,9 @@ O Cinderbox Chat consiste em dois arquivos: `index.html` e `api.php`. É só iss
 
 ### Configuração
 
-1. Copie `index.html` e `api.php` para o diretório raiz do seu servidor:
+1. Copie os arquivos para o diretório raiz do seu servidor:
    ```bash
-   scp api.php index.html usuario@seuservidor.com:~/public_html/
+   scp api.php index.html sw.js manifest.json icon.svg usuario@seuservidor.com:~/public_html/
    ```
 
 2. Acesse seu site no navegador. Uma tela de configuração aparecerá solicitando suas credenciais MySQL.
@@ -74,7 +88,7 @@ scp api.php index.html sw.js manifest.json icon.svg usuario@seuservidor.com:~/pu
 
 Quaisquer novas migrações de banco de dados são executadas automaticamente na primeira requisição após a implantação.
 
-**Importante — atualize a versão do Service Worker a cada implantação** que altere o `index.html`. Abra o `sw.js` e incremente o nome do cache (`cinderbox-v3` → `cinderbox-v4`, etc.) antes de fazer o upload. Isso aciona um ciclo de atualização automático: o novo SW é ativado imediatamente e todas as abas abertas recarregam com a nova versão. Sem essa etapa, usuários no PWA Android/iOS podem continuar executando a versão antiga indefinidamente.
+**Importante — atualize a versão do Service Worker a cada implantação** que altere o `index.html`. Abra o `sw.js` e incremente o nome do cache (ex.: `cinderbox-v4` → `cinderbox-v5`) antes de fazer o upload. Isso aciona um ciclo de atualização automático: o novo SW é ativado imediatamente e todas as abas abertas recarregam com a nova versão. Sem essa etapa, usuários no PWA Android/iOS podem continuar executando a versão antiga indefinidamente.
 
 ---
 
