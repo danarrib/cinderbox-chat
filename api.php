@@ -442,12 +442,12 @@ if ($action === 'sync') {
         if ($retention !== 4) {
             $retention_interval = retention_interval($retention);
             $pres_fetch = $pdo->prepare(
-                "SELECT sender_tag FROM presence
+                "SELECT sender_tag, updated_at FROM presence
                  WHERE room_id = ? AND sender_tag != ? AND updated_at > (NOW() - INTERVAL {$retention_interval})"
             );
             $pres_fetch->execute([$room_id, $sender_tag]);
             foreach ($pres_fetch->fetchAll() as $pr) {
-                $presence[] = $pr['sender_tag'];
+                $presence[] = ['tag' => $pr['sender_tag'], 'last_seen' => $pr['updated_at']];
             }
         }
 

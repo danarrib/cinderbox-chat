@@ -42,7 +42,7 @@ A single sync request covers all rooms the client is currently in. The request b
 }
 ```
 
-The server processes all rooms in a single transaction pass: inserts outbox items, fetches and deletes inbox items, upserts presence, and runs lazy expiry. It returns inbox contents, presence lists, and any per-item errors.
+The server processes all rooms in a single transaction pass: inserts outbox items, fetches and deletes inbox items, upserts presence, and runs lazy expiry. It returns inbox contents, presence lists (as `{tag, last_seen}` objects), and any per-item errors.
 
 The sync timer is started by `startSync()` and runs via `setInterval(doSync, 5000)`. An immediate call is made on start. The `isSyncing` flag prevents concurrent sync calls.
 
@@ -191,10 +191,11 @@ The server maintains a `presence` table. On each sync, the server upserts a row 
 
 The client maintains an in-memory `presenceMap` object: `roomId → [sender_tags]`. This map is sticky — tags are only added, never removed, except when a `leave_room` encrypted message is received from a participant. This prevents participants from disappearing due to a missed sync.
 
-Two additional in-memory structures support the presence model:
+Three additional in-memory structures support the presence model:
 
 - `knownPresenceTags` (`roomId → Set`) — tracks every tag ever seen for a room to detect new arrivals and trigger `profile_update` sends.
 - `firstJoinRooms` (Set of roomIds) — marks rooms where the client should broadcast a `joined_room` message on the first sync after joining.
+- `presenceLastSeen` (`roomId → {tag → ISO timestamp}`) — stores the `updated_at` timestamp returned by the server for each presence entry. Used to display "last seen" relative times in the participants list.
 
 ### Presence in single-view rooms
 
@@ -261,9 +262,9 @@ ACK entries are stored as an array on the message object in IndexedDB:
 
 ## Service Worker and PWA
 
-`sw.js` registers a cache named `cinderbox-v1` containing only the HTML shell (`./`). On a navigation request, it attempts a network fetch first and falls back to the cached shell only if the network is unavailable. All non-navigation requests (API calls) bypass the service worker entirely.
+`sw.js` registers a cache named `cinderbox-v2` containing only the HTML shell (`./`). On a navigation request, it attempts a network fetch first and falls back to the cached shell only if the network is unavailable. All non-navigation requests (API calls) bypass the service worker entirely.
 
-On activation, the service worker deletes any caches with names other than `cinderbox-v1`, ensuring stale caches from previous versions are purged.
+On activation, the service worker deletes any caches with names other than `cinderbox-v2`, ensuring stale caches from previous versions are purged.
 
 The PWA manifest (`manifest.json`) enables installation as a standalone app with a dark background (`#0f1923`) and portrait-primary orientation.
 

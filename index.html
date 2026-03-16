@@ -2933,6 +2933,11 @@ const STRINGS = {
     'btn.send_msg': 'Send',
     'participants.only_you': 'Only you here',
     'participants.count': '{n} participants',
+    'presence.just_now': 'just now',
+    'presence.seconds_ago': '{n}s ago',
+    'presence.minutes_ago': '{n}m ago',
+    'presence.hours_ago': '{n}h ago',
+    'presence.over_a_day': 'over a day ago',
     'create.room_name_label': 'Room Name',
     'create.room_name_optional': '(optional)',
     'create.password_placeholder': 'Share this with participants',
@@ -3028,6 +3033,11 @@ const STRINGS = {
     'btn.send_msg': 'Enviar',
     'participants.only_you': 'Somente você aqui',
     'participants.count': '{n} participantes',
+    'presence.just_now': 'agora mesmo',
+    'presence.seconds_ago': 'há {n}s',
+    'presence.minutes_ago': 'há {n}m',
+    'presence.hours_ago': 'há {n}h',
+    'presence.over_a_day': 'há mais de um dia',
     'create.room_name_label': 'Nome da Sala',
     'create.room_name_optional': '(opcional)',
     'create.password_placeholder': 'Compartilhe com os participantes',
@@ -3186,6 +3196,7 @@ let syncTimer = null;
 let currentRoomId = null;
 let isSyncing = false;
 let presenceMap = {};          // roomId → [sender_tags] — sticky, only cleared on leave_room
+let presenceLastSeen = {};     // roomId → { tag → ISO timestamp } from server
 let knownPresenceTags = {};    // roomId → Set of tags ever seen (to detect new arrivals)
 let firstJoinRooms = new Set(); // roomIds that need a joined_room broadcast on first sync
 let leavingRooms = new Set();  // roomIds being left — signals server to delete presence row
@@ -3222,6 +3233,17 @@ async function sha256(str) {
 function fmtTime(d) {
   if (!(d instanceof Date)) d = new Date(d);
   return d.toLocaleTimeString(currentLang || undefined, {hour:'2-digit',minute:'2-digit',hour12: currentLang === 'en'});
+}
+function fmtLastSeen(isoStr) {
+  if (!isoStr) return '';
+  const secs = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+  if (secs < 15)  return t('presence.just_now');
+  if (secs < 60)  return t('presence.seconds_ago').replace('{n}', secs);
+  const mins = Math.floor(secs / 60);
+  if (mins < 60)  return t('presence.minutes_ago').replace('{n}', mins);
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)   return t('presence.hours_ago').replace('{n}', hrs);
+  return t('presence.over_a_day');
 }
 function fmtDate(d) {
   if (!(d instanceof Date)) d = new Date(d);
@@ -3662,7 +3684,9 @@ function buildParticipantItems(roomId) {
     } else {
       avHtml = `<div class="participant-avatar" style="background:${avatarCss(ph)}">${escHtml(ph.slice(0,2).toUpperCase())}</div>`;
     }
-    el.innerHTML = `${avHtml}<span class="small">${escHtml(ph)}</span>`;
+    const ls = presenceLastSeen[roomId] && presenceLastSeen[roomId][tag];
+    const lsHtml = ls ? `<span class="text-muted" style="font-size:.7rem;margin-left:auto">${fmtLastSeen(ls)}</span>` : '';
+    el.innerHTML = `${avHtml}<span class="small">${escHtml(ph)}</span>${lsHtml}`;
     items.push(el);
   }
   return items;
@@ -4325,9 +4349,12 @@ async function doSync() {
       // Update presence — sticky: add new tags, only remove on leave_room
       const serverPresence = rr.presence || [];
       if (!presenceMap[roomId]) presenceMap[roomId] = [];
+      if (!presenceLastSeen[roomId]) presenceLastSeen[roomId] = {};
       if (!knownPresenceTags[roomId]) knownPresenceTags[roomId] = new Set();
       const newlySeenTags = [];
-      for (const tag of serverPresence) {
+      for (const p of serverPresence) {
+        const tag = p.tag || p; // handle both {tag,last_seen} and plain string
+        if (p.last_seen) presenceLastSeen[roomId][tag] = p.last_seen;
         if (!knownPresenceTags[roomId].has(tag)) {
           newlySeenTags.push(tag);
           knownPresenceTags[roomId].add(tag);
