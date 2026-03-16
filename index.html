@@ -3691,7 +3691,7 @@ function buildParticipantItems(roomId) {
       avHtml = `<div class="participant-avatar" style="background:${avatarCss(ph)}">${escHtml(ph.slice(0,2).toUpperCase())}</div>`;
     }
     const ls = presenceLastSeen[roomId] && presenceLastSeen[roomId][tag];
-    const lsHtml = ls ? `<span class="text-muted" style="font-size:.7rem;margin-left:auto" data-last-seen="${ls}">${fmtLastSeen(ls)}</span>` : '';
+    const lsHtml = ls ? `<span class="text-muted" style="font-size:.7rem;margin-left:auto" data-last-seen="${ls}" data-presence-tag="${tag}">${fmtLastSeen(ls)}</span>` : '';
     el.innerHTML = `${avHtml}<span class="small">${escHtml(ph)}</span>${lsHtml}`;
     items.push(el);
   }
@@ -4360,7 +4360,13 @@ async function doSync() {
       const newlySeenTags = [];
       for (const p of serverPresence) {
         const tag = p.tag || p; // handle both {tag,last_seen} and plain string
-        if (p.last_seen) presenceLastSeen[roomId][tag] = p.last_seen;
+        if (p.last_seen) {
+          presenceLastSeen[roomId][tag] = p.last_seen;
+          // Update any rendered last-seen spans immediately
+          document.querySelectorAll(`[data-presence-tag="${tag}"]`).forEach(el => {
+            el.dataset.lastSeen = p.last_seen;
+          });
+        }
         if (!knownPresenceTags[roomId].has(tag)) {
           newlySeenTags.push(tag);
           knownPresenceTags[roomId].add(tag);
