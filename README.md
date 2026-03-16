@@ -4,6 +4,10 @@ A privacy-focused ephemeral messaging platform built for self-hosting. No accoun
 
 Cinderbox Chat was designed from the ground up to run on infrastructure you control. It deploys as two files on any standard PHP/MySQL shared host and requires no build step, no Node.js, no Docker, and no CDN.
 
+<img width="1916" height="1820" alt="image" src="https://github.com/user-attachments/assets/c18afcca-2c83-4300-a6f5-8697b3a1be73" />
+
+<img width="1125" height="2436" alt="image" src="https://github.com/user-attachments/assets/207e9f06-e054-400b-a551-b6ac0e59d3af" />
+
 ## Live Demo
 
 A public instance is available at **[cc.outros.net](https://cc.outros.net)** — free to use for testing and real conversations. No registration required.
