@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Cinderbox">
 <title>Cinderbox Chat</title>
-<script>(function(){var t=localStorage.getItem('cc_theme')||'dark';document.documentElement.setAttribute('data-bs-theme',t);})();</script>
+<script>(function(){var t=localStorage.getItem('cc_theme')||'dark';document.documentElement.setAttribute('data-bs-theme',t);var l=localStorage.getItem('cc_lang')||'en';document.documentElement.lang=l;})();</script>
 <style>
 @charset "UTF-8";/*!
  * Bootstrap  v5.3.3 (https://getbootstrap.com/)
@@ -3071,6 +3071,7 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.title = t(el.dataset.i18nTitle);
   });
+  document.documentElement.lang = currentLang;
   const sel = document.getElementById('lang-select');
   if (sel) sel.value = currentLang;
 }
