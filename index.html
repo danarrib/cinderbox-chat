@@ -116,13 +116,6 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
   overflow-y: auto;
   line-height: 1.4;
 }
-#participants-panel {
-  width: 220px; min-width: 220px;
-  background: var(--cb-surface);
-  border-left: 1px solid var(--cb-border);
-  display: flex; flex-direction: column;
-  padding: .75rem;
-}
 
 /* Sidebar room list */
 .room-item {
@@ -214,7 +207,6 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
 @media (max-width: 767.98px) {
   #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 200; transform: translateX(-100%); transition: transform .25s; width: 260px !important; min-width: 260px !important; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
   #sidebar.mobile-open { transform: translateX(0); }
-  #participants-panel { display: none !important; }
   #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199; }
   #sidebar-overlay.open { display: block; }
   .msg-row { max-width: 85%; }
@@ -436,11 +428,6 @@ html, body { height: 100%; height: 100dvh; background: var(--cb-bg); color: var(
     </div>
   </div>
 
-  <!-- Right participants panel (desktop) -->
-  <div id="participants-panel">
-    <div class="fw-semibold mb-2 small text-muted text-uppercase" style="letter-spacing:.05em" data-i18n="participants.label">Participants</div>
-    <div id="participants-list"></div>
-  </div>
 </div>
 
 <!-- Settings panel (overlay) -->
@@ -3627,7 +3614,6 @@ async function switchRoom(roomId) {
   updateChatTopbar();
   await renderMessages(roomId);
   renderRoomList();
-  renderParticipants(roomId);
   updateHash(roomId);
 }
 
@@ -3689,12 +3675,6 @@ function buildParticipantItems(roomId) {
     items.push(el);
   }
   return items;
-}
-
-function renderParticipants(roomId) {
-  const listEl = document.getElementById('participants-list');
-  listEl.innerHTML = '';
-  for (const el of buildParticipantItems(roomId)) listEl.appendChild(el);
 }
 
 /* ── Message rendering ───────────────────────────────────────────────────── */
@@ -4369,7 +4349,6 @@ async function doSync() {
       }
       if (roomId === currentRoomId) {
         updateChatTopbar();
-        renderParticipants(roomId);
       }
 
       // Process inbox
@@ -4477,7 +4456,7 @@ async function doSync() {
           const profiles = getProfiles();
           profiles[inboxItem.sender_tag] = { handle: parsed.handle, avatar: parsed.avatar || null };
           saveProfiles(profiles);
-          if (roomId === currentRoomId) { renderParticipants(roomId); updateChatTopbar(); }
+          if (roomId === currentRoomId) { updateChatTopbar(); }
           needsRoomListRender = true;
           continue;
         }
@@ -4595,7 +4574,7 @@ async function doSync() {
           // Remove from sticky presence
           if (presenceMap[roomId]) {
             presenceMap[roomId] = presenceMap[roomId].filter(t => t !== inboxItem.sender_tag);
-            if (roomId === currentRoomId) { renderParticipants(roomId); updateChatTopbar(); }
+            if (roomId === currentRoomId) { updateChatTopbar(); }
           }
           if (knownPresenceTags[roomId]) knownPresenceTags[roomId].delete(inboxItem.sender_tag);
           needsRoomListRender = true;
