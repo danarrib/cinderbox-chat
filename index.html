@@ -5173,18 +5173,75 @@ function closeAckModal() {
 }
 
 /* ── Lightbox ─────────────────────────────────────────────────────────────── */
+let _lbScale = 1, _lbTx = 0, _lbTy = 0;
+let _lbPinchDist0 = 0, _lbScale0 = 1;
+let _lbPanX0 = 0, _lbPanY0 = 0, _lbTx0 = 0, _lbTy0 = 0;
+let _lbIsPinching = false, _lbTouchMoved = false;
+
+function _lbDist(a, b) { return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY); }
+function _lbApply() {
+  document.getElementById('lightbox-img').style.transform = `translate(${_lbTx}px,${_lbTy}px) scale(${_lbScale})`;
+}
+function _lbReset() { _lbScale = 1; _lbTx = 0; _lbTy = 0; _lbApply(); }
+
+function _lbTouchStart(e) {
+  e.stopPropagation();
+  _lbTouchMoved = false;
+  if (e.touches.length === 2) {
+    _lbIsPinching = true;
+    _lbPinchDist0 = _lbDist(e.touches[0], e.touches[1]);
+    _lbScale0 = _lbScale; _lbTx0 = _lbTx; _lbTy0 = _lbTy;
+    _lbPanX0 = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    _lbPanY0 = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+  } else if (e.touches.length === 1) {
+    _lbIsPinching = false;
+    _lbPanX0 = e.touches[0].clientX; _lbPanY0 = e.touches[0].clientY;
+    _lbTx0 = _lbTx; _lbTy0 = _lbTy;
+  }
+}
+function _lbTouchMove(e) {
+  e.preventDefault(); e.stopPropagation();
+  _lbTouchMoved = true;
+  if (e.touches.length === 2 && _lbIsPinching) {
+    const dist = _lbDist(e.touches[0], e.touches[1]);
+    _lbScale = Math.max(1, Math.min(8, _lbScale0 * dist / _lbPinchDist0));
+    _lbTx = _lbTx0 + (e.touches[0].clientX + e.touches[1].clientX) / 2 - _lbPanX0;
+    _lbTy = _lbTy0 + (e.touches[0].clientY + e.touches[1].clientY) / 2 - _lbPanY0;
+    _lbApply();
+  } else if (e.touches.length === 1 && !_lbIsPinching && _lbScale > 1) {
+    _lbTx = _lbTx0 + e.touches[0].clientX - _lbPanX0;
+    _lbTy = _lbTy0 + e.touches[0].clientY - _lbPanY0;
+    _lbApply();
+  }
+}
+function _lbTouchEnd(e) {
+  e.stopPropagation();
+  if (_lbScale < 1.05) _lbReset();
+  if (_lbScale > 1.05 || _lbTouchMoved) e.preventDefault(); // suppress synthetic click
+  _lbIsPinching = false;
+}
+
 function openLightbox(src, caption) {
-  document.getElementById('lightbox-img').src = src;
+  _lbReset();
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  img.addEventListener('touchstart', _lbTouchStart, { passive: false });
+  img.addEventListener('touchmove',  _lbTouchMove,  { passive: false });
+  img.addEventListener('touchend',   _lbTouchEnd,   { passive: false });
   const cap = document.getElementById('lightbox-caption');
   cap.textContent = caption || '';
   cap.style.display = caption ? 'block' : 'none';
-  const overlay = document.getElementById('lightbox-overlay');
-  overlay.style.display = 'flex';
+  document.getElementById('lightbox-overlay').style.display = 'flex';
 }
 
 function closeLightbox() {
+  const img = document.getElementById('lightbox-img');
+  img.removeEventListener('touchstart', _lbTouchStart);
+  img.removeEventListener('touchmove',  _lbTouchMove);
+  img.removeEventListener('touchend',   _lbTouchEnd);
+  _lbReset();
   document.getElementById('lightbox-overlay').style.display = 'none';
-  document.getElementById('lightbox-img').src = '';
+  img.src = '';
 }
 
 /* ── Single-view toggle button ────────────────────────────────────────────── */
@@ -5608,9 +5665,9 @@ if ('serviceWorker' in navigator) {
 </div>
 
 <!-- Lightbox overlay -->
-<div id="lightbox-overlay" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1070;align-items:center;justify-content:center;flex-direction:column;padding:20px">
+<div id="lightbox-overlay" onclick="if(event.target===this)closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1070;align-items:center;justify-content:center;flex-direction:column;padding:20px">
   <button onclick="closeLightbox()" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.8rem;color:#fff;cursor:pointer;line-height:1">✕</button>
-  <img id="lightbox-img" style="max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain">
+  <img id="lightbox-img" style="max-width:100%;max-height:85vh;border-radius:8px;object-fit:contain;touch-action:none">
   <div id="lightbox-caption" style="color:#fff;margin-top:12px;font-size:.9rem;text-align:center;max-width:600px;word-break:break-word"></div>
 </div>
 </body>
