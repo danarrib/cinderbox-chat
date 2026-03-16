@@ -3415,12 +3415,14 @@ function requestNotificationPermission() {
 function notifyNewMessage(roomName) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (document.visibilityState === 'visible') return; // only notify when in background
-  new Notification('Cinderbox Chat', {
-    body: `New message in ${roomName || 'a room'}`,
-    icon: './icon.svg',
-    tag: 'cinderbox-msg',
-    silent: false,
-  });
+  const title = 'Cinderbox Chat';
+  const options = { body: `New message in ${roomName || 'a room'}`, icon: './icon.svg', tag: 'cinderbox-msg', silent: false };
+  // Android Chrome PWA requires showNotification() via Service Worker; new Notification() is silently blocked
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.ready.then(reg => reg.showNotification(title, options)).catch(() => {});
+  } else {
+    new Notification(title, options);
+  }
 }
 
 function logoClick() {
