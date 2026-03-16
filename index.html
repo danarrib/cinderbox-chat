@@ -3655,10 +3655,24 @@ function buildParticipantItems(roomId) {
   selfEl.innerHTML = `${avatarHtml2}<span class="small">${escHtml(handle)} <span class="text-muted">(you)</span></span>`;
   items.push(selfEl);
 
-  for (const tag of pres) {
-    if (tag === room._myTag) continue;
-    const p = profiles[tag];
-    const ph = p ? p.handle : tag.slice(0,8) + '…';
+  const now = Date.now();
+  const ONE_HOUR = 3600;
+
+  const others = pres
+    .filter(tag => tag !== room._myTag)
+    .map(tag => {
+      const p = profiles[tag];
+      const ph = p ? p.handle : tag.slice(0,8) + '…';
+      const ls = presenceLastSeen[roomId] && presenceLastSeen[roomId][tag];
+      const recent = ls && (now / 1000 - ls) < ONE_HOUR;
+      return { tag, p, ph, ls, recent };
+    })
+    .sort((a, b) => {
+      if (a.recent !== b.recent) return a.recent ? -1 : 1;
+      return a.ph.localeCompare(b.ph);
+    });
+
+  for (const { tag, p, ph, ls } of others) {
     const el = document.createElement('div');
     el.className = 'participant-item';
     el.style.cursor = 'pointer';
@@ -3669,7 +3683,6 @@ function buildParticipantItems(roomId) {
     } else {
       avHtml = `<div class="participant-avatar" style="background:${avatarCss(ph)}">${escHtml(ph.slice(0,2).toUpperCase())}</div>`;
     }
-    const ls = presenceLastSeen[roomId] && presenceLastSeen[roomId][tag];
     const lsHtml = ls ? `<span class="text-muted" style="font-size:.7rem;margin-left:auto" data-last-seen="${ls}" data-presence-tag="${tag}">${fmtLastSeen(ls)}</span>` : '';
     el.innerHTML = `${avHtml}<span class="small">${escHtml(ph)}</span>${lsHtml}`;
     items.push(el);
