@@ -109,6 +109,7 @@ Any new database migrations run automatically on the first request after deploym
 | Message size | 2 MB hard limit enforced server-side |
 | Setup endpoint | Disabled permanently after first run (returns 403) |
 | Config file | Excluded from git via `.gitignore` |
+| XSS — received content | Avatars validated to `data:image/` prefix; all user-controlled values HTML-escaped before DOM insertion |
 
 ---
 

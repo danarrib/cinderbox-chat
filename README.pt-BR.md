@@ -109,6 +109,7 @@ Quaisquer novas migrações de banco de dados são executadas automaticamente na
 | Tamanho da mensagem | Limite rígido de 2 MB aplicado no servidor |
 | Endpoint de configuração | Desativado permanentemente após o primeiro uso (retorna 403) |
 | Arquivo de configuração | Excluído do git via `.gitignore` |
+| XSS — conteúdo recebido | Avatares validados com prefixo `data:image/`; todos os valores controlados pelo usuário são escapados em HTML antes da inserção no DOM |
 
 ---
 

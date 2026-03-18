@@ -189,3 +189,14 @@ Practical implication: if a participant's device is compromised, all historical 
 ### No IP Logging
 
 The server sets `error_reporting(0)` and has no logging code. No IP addresses or user agents are written to disk. However, the web server's access log (managed by the hosting provider, outside the application) may record IP addresses independently.
+
+### Client-Side XSS Mitigations
+
+Decrypted message content is inserted into the DOM using template literals with `innerHTML`. All user-controlled values are sanitised at the point of insertion:
+
+- **Avatars (received):** validated to start with `data:image/` before being stored in `cc_profiles`. If validation fails the avatar is discarded and a generated initial-letter avatar is shown instead. At render time the value is also passed through `escHtml()` in the `src` attribute.
+- **Text content:** always passed through `escHtml()` before DOM insertion.
+- **Image `src` and audio `src` in message bubbles:** passed through `escHtml()` to prevent attribute injection.
+- **Single-view modal:** image and audio `src` values are passed through `escHtml()` before being set on the element.
+
+The practical attack surface is limited to room participants who already know the room password (since all content is E2E-encrypted). These mitigations prevent a malicious participant from injecting JavaScript that could exfiltrate `localStorage` or `IndexedDB` data belonging to other rooms on the same origin.

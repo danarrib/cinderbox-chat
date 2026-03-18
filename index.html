@@ -3115,8 +3115,8 @@ function updateNavAvatar() {
   const handle = getHandle();
   const avatar = getAvatar();
   const size = 32;
-  if (avatar) {
-    el.innerHTML = `<div class="room-avatar" style="width:${size}px;height:${size}px"><img src="${avatar}" alt=""></div>`;
+  if (isSafeAvatar(avatar)) {
+    el.innerHTML = `<div class="room-avatar" style="width:${size}px;height:${size}px"><img src="${escHtml(avatar)}" alt=""></div>`;
   } else if (handle) {
     el.innerHTML = `<div class="room-avatar" style="width:${size}px;height:${size}px;font-size:11px;background:${avatarCss(handle)}">${escHtml(handle.slice(0,2).toUpperCase())}</div>`;
   } else {
@@ -3357,8 +3357,8 @@ function avatarHtml(senderTag) {
   const p = profiles[senderTag];
   const handle = p ? p.handle : '?';
   const click = `onclick="openProfileTap('${senderTag}')" style="cursor:pointer"`;
-  if (p && p.avatar) {
-    return `<div class="msg-avatar" ${click}><img src="${p.avatar}" alt="${escHtml(handle)}"></div>`;
+  if (p && isSafeAvatar(p.avatar)) {
+    return `<div class="msg-avatar" ${click}><img src="${escHtml(p.avatar)}" alt="${escHtml(handle)}"></div>`;
   }
   const initials = handle.slice(0,2).toUpperCase();
   const bg = avatarCss(handle);
@@ -3369,6 +3369,10 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 const escapeHtml = escHtml;
+
+function isSafeAvatar(url) {
+  return typeof url === 'string' && url.startsWith('data:image/');
+}
 
 /* ── IndexedDB ────────────────────────────────────────────────────────────── */
 function openDB() {
@@ -4063,10 +4067,10 @@ async function handleSingleViewOpen(msg) {
   const type = msg.inner_type || 'text';
   let body = '';
   if (type === 'image') {
-    body = `<img src="${msg.content}" style="max-width:100%;border-radius:8px;display:block">`;
+    body = `<img src="${escHtml(msg.content || '')}" style="max-width:100%;border-radius:8px;display:block">`;
     if (msg.caption) body += `<div style="margin-top:8px;font-size:.9rem;word-break:break-word">${escHtml(msg.caption)}</div>`;
   } else if (type === 'audio') {
-    body = `<audio controls src="${msg.content}" style="width:100%"></audio>`;
+    body = `<audio controls src="${escHtml(msg.content || '')}" style="width:100%"></audio>`;
   } else {
     body = `<p style="margin:0;word-break:break-word">${escHtml(msg.text || msg.content || '')}</p>`;
   }
@@ -4580,7 +4584,7 @@ async function doSync() {
         if (msgType === 'profile_update') {
           dbg(`  profile_update: handle="${parsed.handle}" from ${tag8(inboxItem.sender_tag)}`);
           const profiles = getProfiles();
-          profiles[inboxItem.sender_tag] = { handle: parsed.handle, avatar: parsed.avatar || null };
+          profiles[inboxItem.sender_tag] = { handle: parsed.handle, avatar: isSafeAvatar(parsed.avatar) ? parsed.avatar : null };
           saveProfiles(profiles);
           if (roomId === currentRoomId) { updateChatTopbar(); }
           needsRoomListRender = true;
