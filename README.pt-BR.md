@@ -59,6 +59,7 @@ O Cinderbox Chat faz deploy como um pequeno conjunto de arquivos estáticos junt
 | `sw.js` | Service Worker — shell offline e ciclo de atualização do PWA |
 | `manifest.json` | Manifesto PWA — habilita "Adicionar à tela inicial" |
 | `icon.svg` | Ícone do aplicativo |
+| `.htaccess` | Redirecionamento HTTP→HTTPS e cabeçalho HSTS (Apache) |
 
 `index.html` e `api.php` são os únicos arquivos estritamente necessários para o funcionamento do app. Os outros três habilitam a instalação como PWA e o shell de fallback offline.
 
@@ -71,7 +72,7 @@ O Cinderbox Chat faz deploy como um pequeno conjunto de arquivos estáticos junt
 
 1. Copie os arquivos para o diretório raiz do seu servidor:
    ```bash
-   scp api.php index.html sw.js manifest.json icon.svg usuario@seuservidor.com:~/public_html/
+   scp api.php index.html sw.js manifest.json icon.svg .htaccess usuario@seuservidor.com:~/public_html/
    ```
 
 2. Acesse seu site no navegador. Uma tela de configuração aparecerá solicitando suas credenciais MySQL.
@@ -83,7 +84,7 @@ Pronto. Sem etapa de build, sem gerenciador de pacotes, sem variáveis de ambien
 ### Implantando Atualizações
 
 ```bash
-scp api.php index.html sw.js manifest.json icon.svg usuario@seuservidor.com:~/public_html/
+scp api.php index.html sw.js manifest.json icon.svg .htaccess usuario@seuservidor.com:~/public_html/
 ```
 
 Quaisquer novas migrações de banco de dados são executadas automaticamente na primeira requisição após a implantação.

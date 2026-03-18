@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Cinderbox">
 <title>Cinderbox Chat</title>
-<script>(function(){var t=localStorage.getItem('cc_theme')||'dark';document.documentElement.setAttribute('data-bs-theme',t);var l=localStorage.getItem('cc_lang')||'en';document.documentElement.lang=l;})();</script>
+<script>(function(){if(location.protocol==='http:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1'){location.replace('https://'+location.host+location.pathname+location.search+location.hash);}var t=localStorage.getItem('cc_theme')||'dark';document.documentElement.setAttribute('data-bs-theme',t);var l=localStorage.getItem('cc_lang')||'en';document.documentElement.lang=l;})();</script>
 <style>
 @charset "UTF-8";/*!
  * Bootstrap  v5.3.3 (https://getbootstrap.com/)
@@ -3213,7 +3213,8 @@ let presenceLastSeen = {};     // roomId → { tag → ISO timestamp } from serv
 let knownPresenceTags = {};    // roomId → Set of tags ever seen (to detect new arrivals)
 let firstJoinRooms = new Set(); // roomIds that need a joined_room broadcast on first sync
 let leavingRooms = new Set();  // roomIds being left — signals server to delete presence row
-let unreadCounts = {};   // roomId → count
+let unreadCounts = {};         // roomId → count
+let roomLastActivity = {};    // roomId → ISO timestamp of most recent message
 let profileScreenReturn = 'landing';
 let replyingToMsg = null;
 let currentSvMsg = null;
@@ -3616,7 +3617,11 @@ function copyRoomUrl() {
 
 /* ── Room list / sidebar rendering ───────────────────────────────────────── */
 async function renderRoomList() {
-  const rooms = getRooms();
+  const rooms = getRooms().slice().sort((a, b) => {
+    const ta = roomLastActivity[a.id] || a.joinedAt || '';
+    const tb = roomLastActivity[b.id] || b.joinedAt || '';
+    return tb < ta ? -1 : tb > ta ? 1 : 0;
+  });
   const listEl = document.getElementById('room-list');
   listEl.innerHTML = '';
 
@@ -3689,6 +3694,7 @@ function getRoomAvatarHtml(roomId, size) {
 /* ── Switching rooms ─────────────────────────────────────────────────────── */
 async function switchRoom(roomId) {
   currentRoomId = roomId;
+  localStorage.setItem('cc_last_room', roomId);
   unreadCounts[roomId] = 0;
   updateFavicon();
 
@@ -4770,6 +4776,8 @@ async function doSync() {
           is_outgoing: false,
         };
         await dbPut('messages', msgObj);
+        if (!roomLastActivity[roomId] || msgObj.sent_at > roomLastActivity[roomId])
+          roomLastActivity[roomId] = msgObj.sent_at;
         hasNew = true;
         if (roomId === currentRoomId) needsMessageRender = true;
 
@@ -4901,6 +4909,7 @@ async function sendMessage(contentOrOpts, type = 'text') {
       recipient_tags: recipients, acks: [],
     });
   }
+  roomLastActivity[currentRoomId] = sentAt;
 
   // Encrypt and add to outbox for each recipient
   if (recipients.length === 0) {
@@ -5413,6 +5422,16 @@ function updateActionButton() {
 /* ── Init ─────────────────────────────────────────────────────────────────── */
 async function init() {
   db = await openDB();
+
+  // Seed roomLastActivity from stored messages so the sidebar sort is correct on startup
+  try {
+    const allMsgs = await dbGetAll('messages');
+    for (const m of allMsgs) {
+      if (m.sent_at && m.room_id && (!roomLastActivity[m.room_id] || m.sent_at > roomLastActivity[m.room_id]))
+        roomLastActivity[m.room_id] = m.sent_at;
+    }
+  } catch(e) {}
+
   updateThemeButtons();
   setupEventListeners();
   applyI18n();
@@ -5480,8 +5499,10 @@ async function init() {
       showScreen('join');
     }
   } else if (rooms.length > 0) {
+    const lastRoomId = localStorage.getItem('cc_last_room');
+    const startRoom = rooms.find(r => r.id === lastRoomId) ? lastRoomId : rooms[0].id;
     showScreen('chat');
-    await switchRoom(rooms[0].id);
+    await switchRoom(startRoom);
     renderRoomList();
     startSync();
   } else {

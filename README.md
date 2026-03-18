@@ -59,6 +59,7 @@ Cinderbox Chat deploys as a small set of static files alongside a single PHP scr
 | `sw.js` | Service Worker — offline shell and PWA update cycle |
 | `manifest.json` | PWA manifest — enables "Add to Home Screen" |
 | `icon.svg` | Application icon |
+| `.htaccess` | HTTP→HTTPS redirect and HSTS header (Apache) |
 
 `index.html` and `api.php` are the only files strictly required for the app to function. The remaining three enable PWA installation and the offline fallback shell.
 
@@ -71,7 +72,7 @@ Cinderbox Chat deploys as a small set of static files alongside a single PHP scr
 
 1. Copy the files to your web root:
    ```bash
-   scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_html/
+   scp api.php index.html sw.js manifest.json icon.svg .htaccess user@yourhost.com:~/public_html/
    ```
 
 2. Visit your site in a browser. A setup screen will appear asking for your MySQL credentials.
@@ -83,7 +84,7 @@ That's all. No build step, no package manager, no environment variables.
 ### Deploying Updates
 
 ```bash
-scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_html/
+scp api.php index.html sw.js manifest.json icon.svg .htaccess user@yourhost.com:~/public_html/
 ```
 
 Any new database migrations run automatically on the first request after deployment.

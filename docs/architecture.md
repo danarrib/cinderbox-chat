@@ -111,6 +111,7 @@ All keys are prefixed `cc_`. Values are read on every page load; there is no in-
 | `cc_outbox_map` | JSON object | Map of `outbox_item_id → original_message_id`. Persisted across page loads so ACKs received in a future session can update the correct message record. |
 | `cc_theme` | String | `"dark"` or `"light"`. Read immediately on page load (before the DOM is fully parsed) to avoid a flash of unstyled content. |
 | `cc_lang` | String | Active UI locale: `"en"` or `"pt-BR"`. Read by `applyI18n()` on every language change and on startup. Defaults to `"en"` if absent. |
+| `cc_last_room` | String or absent | ID of the last active room. Restored on next launch; falls back to the first room in the list if absent or no longer valid. |
 | `cc_debug` | String or absent | Set to `"1"` to enable verbose `[cbx]` console logging. Absent by default. |
 
 **Room object structure (inside `cc_rooms` array):**

@@ -7,6 +7,21 @@ header('Content-Type: application/json');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
+// Enforce HTTPS. Check direct TLS and common reverse-proxy headers.
+// Localhost is exempt to allow local development.
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$isLocalhost = in_array($host, ['localhost', '127.0.0.1', '[::1]'], true)
+    || str_starts_with($host, 'localhost:');
+if (!$isLocalhost) {
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_SSL'])   && $_SERVER['HTTP_X_FORWARDED_SSL']   === 'on')
+        || (isset($_SERVER['SERVER_PORT'])             && (int)$_SERVER['SERVER_PORT']        === 443);
+    if (!$https) {
+        json_out(['ok' => false, 'error' => 'HTTPS required'], 403);
+    }
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function uuidv4() {
