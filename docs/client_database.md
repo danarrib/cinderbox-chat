@@ -181,6 +181,20 @@ Key: 64-char hex sender tag. Value: `{ handle: string, avatar: string|null }`.
 
 ---
 
+### `cc_known_tags`
+
+| Property | Value |
+|----------|-------|
+| Type | JSON object (map) |
+| Example | `{"<roomId>": ["<tag1>", "<tag2>"]}` |
+| Written | After every sync that updates presence for any room; also on room leave, delete, or purge. |
+| Read | On startup, to restore `knownPresenceTags` into memory before the first sync. |
+| Deleted | Per-room entry removed when the room is left, deleted, or purged. Entire key cleared on "clear all data". |
+
+Maps each `roomId` to the array of session-level sender tags that have ever been seen in that room's presence list. Used to detect new arrivals without generating false "joined" notices after a cold start (app restart or refresh). See architecture.md — Join detection.
+
+---
+
 ### `cc_outbox_map`
 
 | Property | Value |

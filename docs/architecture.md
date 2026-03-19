@@ -112,6 +112,7 @@ All keys are prefixed `cc_`. Values are read on every page load; there is no in-
 | `cc_theme` | String | `"dark"` or `"light"`. Read immediately on page load (before the DOM is fully parsed) to avoid a flash of unstyled content. |
 | `cc_lang` | String | Active UI locale: `"en"` or `"pt-BR"`. Read by `applyI18n()` on every language change and on startup. Defaults to `"en"` if absent. |
 | `cc_last_room` | String or absent | ID of the last active room. Restored on next launch; falls back to the first room in the list if absent or no longer valid. |
+| `cc_known_tags` | JSON object | Map of `roomId → [senderTag, ...]`. Persisted known presence tags per room, used to detect new arrivals without generating false join notices after a cold start. |
 | `cc_debug` | String or absent | Set to `"1"` to enable verbose `[cbx]` console logging. Absent by default. |
 
 **Room object structure (inside `cc_rooms` array):**
@@ -193,11 +194,22 @@ The server maintains a `presence` table. On each sync, the server upserts a row 
 
 The client maintains an in-memory `presenceMap` object: `roomId → [sender_tags]`. This map is sticky — tags are only added, never removed, except when a `leave_room` encrypted message is received from a participant. This prevents participants from disappearing due to a missed sync.
 
-Three additional in-memory structures support the presence model:
+Four additional structures support the presence model:
 
-- `knownPresenceTags` (`roomId → Set`) — tracks every tag ever seen for a room to detect new arrivals and trigger `profile_update` sends.
-- `firstJoinRooms` (Set of roomIds) — marks rooms where the client should broadcast a `joined_room` message on the first sync after joining.
+- `knownPresenceTags` (`roomId → Set`) — tracks every tag ever seen for a room. Persisted across sessions in `cc_known_tags` (localStorage). Used to detect new arrivals and generate local join notices.
+- `firstJoinRooms` (Set of roomIds) — marks rooms where the first sync should seed `knownPresenceTags` without generating join notices (i.e., rooms the user just joined — they are the new arrival, not the others).
+- `coldStartDone` (boolean) — starts `false`, set to `true` after the first sync completes. Gates two behaviors: join-notice generation (suppressed on cold start) and the cold-start profile blast.
 - `presenceLastSeen` (`roomId → {tag → ISO timestamp}`) — stores the `updated_at` timestamp returned by the server for each presence entry. Used to display "last seen" relative times in the participants list.
+
+### Join detection
+
+"X joined the room" notices are generated entirely on the client — no server-routed `joined_room` message is involved. On each sync, the new presence tags (those not in `knownPresenceTags[roomId]`) are compared:
+
+- **Cold start** (`coldStartDone` is `false`): all presence tags are merged into `knownPresenceTags` with no notices. A `profile_update` (and `room_name` for owners) is sent to every participant in every room, ensuring profiles are fresh after any offline period. `coldStartDone` is set to `true` after the first sync completes.
+- **New room join** (`firstJoinRooms` contains the room ID): same seed-without-notice behavior — the local user is the new arrival. The `newlySeenTags` loop sends `profile_update` to all existing participants as usual.
+- **Normal operation** (`coldStartDone` is `true`, room not in `firstJoinRooms`): each newly seen tag triggers a locally written `system_notice` message ("X joined the room."). The notice ID is deterministic (`'joined:' + roomId + ':' + tag`) to prevent duplicates. If the profile for that tag has not yet arrived, the short tag (first 8 chars + `…`) is used as a placeholder; the notice is updated with the real handle when the `profile_update` is received.
+
+`knownPresenceTags` is persisted to `cc_known_tags` in localStorage after each sync and cleaned up when a room is left, purged, or deleted. This prevents cold-start noise (every currently-online participant appearing to "join" after every app restart).
 
 ---
 
@@ -246,7 +258,7 @@ ACK entries are stored as an array on the message object in IndexedDB:
 
 **Create:** Client generates a UUIDv4 room ID, a 32-byte random delete token (stored as hex), derives an encryption key from the password, encrypts the room ID as the `encryption_test`, and POSTs to `?action=create`. On success, the room is added to `cc_rooms` with the plaintext delete token and password.
 
-**Join:** Client POSTs to `?action=check` with the room ID. Server returns `exists` and the `encryption_test`. Client derives the key from the entered password and attempts to decrypt the `encryption_test`. If the decrypted value matches the room ID, the password is correct. The room is added to `cc_rooms` (with `deleteToken: null`) and marked in `firstJoinRooms` for a `joined_room` broadcast.
+**Join:** Client POSTs to `?action=check` with the room ID. Server returns `exists` and the `encryption_test`. Client derives the key from the entered password and attempts to decrypt the `encryption_test`. If the decrypted value matches the room ID, the password is correct. The room is added to `cc_rooms` (with `deleteToken: null`) and marked in `firstJoinRooms` so the first sync seeds presence without generating spurious join notices.
 
 **Sync:** After joining or creating, `startSync()` begins the 5-second polling loop.
 

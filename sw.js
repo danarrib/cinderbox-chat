@@ -1,4 +1,4 @@
-const CACHE = 'cinderbox-v5';
+const CACHE = 'cinderbox-v6';
 const SHELL = ['./'];
 
 self.addEventListener('install', e => {

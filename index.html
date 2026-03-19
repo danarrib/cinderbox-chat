@@ -3211,7 +3211,8 @@ let isSyncing = false;
 let presenceMap = {};          // roomId → [sender_tags] — sticky, only cleared on leave_room
 let presenceLastSeen = {};     // roomId → { tag → ISO timestamp } from server
 let knownPresenceTags = {};    // roomId → Set of tags ever seen (to detect new arrivals)
-let firstJoinRooms = new Set(); // roomIds that need a joined_room broadcast on first sync
+let firstJoinRooms = new Set(); // roomIds where first sync should seed presence without generating join notices
+let coldStartDone = false;      // set true after first sync; gates join-notice generation and cold-start profile blast
 let leavingRooms = new Set();  // roomIds being left — signals server to delete presence row
 let unreadCounts = {};         // roomId → count
 let roomLastActivity = {};    // roomId → ISO timestamp of most recent message
@@ -3295,6 +3296,12 @@ function getProfiles() { try { return JSON.parse(localStorage.getItem('cc_profil
 function getOutboxMap() { try { return JSON.parse(localStorage.getItem('cc_outbox_map') || '{}'); } catch { return {}; } }
 function saveOutboxMap(m) { localStorage.setItem('cc_outbox_map', JSON.stringify(m)); }
 function saveProfiles(p) { localStorage.setItem('cc_profiles', JSON.stringify(p)); }
+function getKnownTags() { try { return JSON.parse(localStorage.getItem('cc_known_tags') || '{}'); } catch { return {}; } }
+function saveKnownTags() {
+  const obj = {};
+  for (const roomId in knownPresenceTags) { obj[roomId] = [...knownPresenceTags[roomId]]; }
+  localStorage.setItem('cc_known_tags', JSON.stringify(obj));
+}
 
 function getRoomById(id) { return getRooms().find(r => r.id === id) || null; }
 function updateRoom(updated) {
@@ -4477,6 +4484,7 @@ async function doSync() {
         }
         if (!presenceMap[roomId].includes(tag)) presenceMap[roomId].push(tag);
       }
+      saveKnownTags();
       if (roomId === currentRoomId) {
         updateChatTopbar();
       }
@@ -4487,28 +4495,38 @@ async function doSync() {
       const key = await deriveKey(room.password, roomId);
       const myTag = await sha256(handle + roomId);
 
-      // First join: broadcast joined_room to all visible participants
-      if (firstJoinRooms.has(roomId)) {
-        firstJoinRooms.delete(roomId);
-        for (const tag of presenceMap[roomId]) {
-          if (tag === myTag) continue;
-          const payload = JSON.stringify({ type: 'joined_room', handle, sent_at: new Date().toISOString() });
-          const ciphertext = await encrypt(key, payload);
-          await dbPut('outbox', { id: uuidv4(), room_id: roomId, recipient_tag: tag, ciphertext, sender_tag: myTag, type: 'joined_room', sent_at: new Date().toISOString() });
+      const isNewRoomJoin = firstJoinRooms.has(roomId);
+      if (isNewRoomJoin) firstJoinRooms.delete(roomId);
+
+      // Generate join notices for truly new arrivals (skip on cold start and on first join to a room)
+      if (coldStartDone && !isNewRoomJoin) {
+        for (const tag of newlySeenTags) {
+          if (tag === senderTag) continue;
+          const noticeId = 'joined:' + roomId + ':' + tag;
+          const existing = await dbGet('messages', noticeId);
+          if (!existing) {
+            const profiles = getProfiles();
+            const pf = profiles[tag];
+            const displayHandle = pf ? pf.handle : (tag.slice(0, 8) + '\u2026');
+            await dbPut('messages', { id: noticeId, room_id: roomId, type: 'system_notice', sender_tag: tag, content: `${displayHandle} ${t('msg.joined')}.`, sent_at: new Date().toISOString(), status: null, is_outgoing: false });
+            if (roomId === currentRoomId) needsMessageRender = true;
+            notifyNewMessage(getRoomDisplayName(roomId));
+          }
         }
       }
 
-      // New participant detected: send profile_update (and room_name if owner)
-      for (const newTag of newlySeenTags) {
-        if (newTag === myTag) continue;
+      // Send profile_update: blast to all on cold start, otherwise only to newly seen tags
+      const profileTargets = !coldStartDone ? serverPresence.map(p => p.tag || p) : newlySeenTags;
+      for (const tag of profileTargets) {
+        if (tag === senderTag) continue;
         const avatar = getAvatar();
         const profilePayload = JSON.stringify({ type: 'profile_update', handle, avatar, sent_at: new Date().toISOString() });
         const profileCiphertext = await encrypt(key, profilePayload);
-        await dbPut('outbox', { id: uuidv4(), room_id: roomId, recipient_tag: newTag, ciphertext: profileCiphertext, sender_tag: myTag, type: 'profile_update', sent_at: new Date().toISOString() });
+        await dbPut('outbox', { id: uuidv4(), room_id: roomId, recipient_tag: tag, ciphertext: profileCiphertext, sender_tag: myTag, type: 'profile_update', sent_at: new Date().toISOString() });
         if (room.deleteToken && room.name) {
           const namePayload = JSON.stringify({ type: 'room_name', name: room.name, sent_at: new Date().toISOString() });
           const nameCiphertext = await encrypt(key, namePayload);
-          await dbPut('outbox', { id: uuidv4(), room_id: roomId, recipient_tag: newTag, ciphertext: nameCiphertext, sender_tag: myTag, type: 'room_name', sent_at: new Date().toISOString() });
+          await dbPut('outbox', { id: uuidv4(), room_id: roomId, recipient_tag: tag, ciphertext: nameCiphertext, sender_tag: myTag, type: 'room_name', sent_at: new Date().toISOString() });
         }
       }
 
@@ -4586,6 +4604,14 @@ async function doSync() {
           const profiles = getProfiles();
           profiles[inboxItem.sender_tag] = { handle: parsed.handle, avatar: isSafeAvatar(parsed.avatar) ? parsed.avatar : null };
           saveProfiles(profiles);
+          // Update any join notice that was stored with a short-tag placeholder
+          const noticeId = 'joined:' + roomId + ':' + inboxItem.sender_tag;
+          const notice = await dbGet('messages', noticeId);
+          if (notice) {
+            notice.content = `${parsed.handle} ${t('msg.joined')}.`;
+            await dbPut('messages', notice);
+            needsMessageRender = true;
+          }
           if (roomId === currentRoomId) { updateChatTopbar(); }
           needsRoomListRender = true;
           continue;
@@ -4669,29 +4695,7 @@ async function doSync() {
         }
 
         if (msgType === 'joined_room') {
-          dbg(`↓ joined_room from ${tag8(inboxItem.sender_tag)} (handle="${parsed.handle}")`);
-          const existing = await dbGet('messages', inboxItem.id);
-          if (!existing) {
-            const profiles = getProfiles();
-            const p = profiles[inboxItem.sender_tag];
-            const displayHandle = p ? p.handle : (parsed.handle || inboxItem.sender_tag.slice(0,8) + '…');
-            await dbPut('messages', { id: inboxItem.id, room_id: roomId, type: 'system_notice', sender_tag: inboxItem.sender_tag, content: `${displayHandle} ${t('msg.joined')}.`, sent_at: parsed.sent_at || new Date().toISOString(), status: null, is_outgoing: false });
-            if (roomId === currentRoomId) needsMessageRender = true;
-            notifyNewMessage(getRoomDisplayName(roomId));
-          }
-          // Mark as known so presence detection doesn't double-send greetings
-          if (!knownPresenceTags[roomId]) knownPresenceTags[roomId] = new Set();
-          knownPresenceTags[roomId].add(inboxItem.sender_tag);
-          // Send back our profile so the joiner knows us
-          const avatar = getAvatar();
-          const profilePayload = JSON.stringify({ type: 'profile_update', handle, avatar, sent_at: new Date().toISOString() });
-          const profileCiphertext = await encrypt(key, profilePayload);
-          await dbPut('outbox', { id: uuidv4(), room_id: roomId, recipient_tag: inboxItem.sender_tag, ciphertext: profileCiphertext, sender_tag: myTag, type: 'profile_update', sent_at: new Date().toISOString() });
-          if (room.deleteToken && room.name) {
-            const namePayload = JSON.stringify({ type: 'room_name', name: room.name, sent_at: new Date().toISOString() });
-            const nameCiphertext = await encrypt(key, namePayload);
-            await dbPut('outbox', { id: uuidv4(), room_id: roomId, recipient_tag: inboxItem.sender_tag, ciphertext: nameCiphertext, sender_tag: myTag, type: 'room_name', sent_at: new Date().toISOString() });
-          }
+          // Legacy message type — silently drop (join detection is now presence-based)
           continue;
         }
 
@@ -4803,6 +4807,7 @@ async function doSync() {
       if (hasNew) needsRoomListRender = true;
     }
 
+    if (!coldStartDone) coldStartDone = true;
     if (needsMessageRender && currentRoomId) await renderMessages(currentRoomId);
     if (needsRoomListRender) await renderRoomList();
 
@@ -5109,9 +5114,14 @@ async function deleteRoom() {
     });
     const data = await resp.json();
     if (data.ok) {
-      // Remove from localStorage
-      const rooms = getRooms().filter(r => r.id !== currentRoomId);
+      // Remove from localStorage and clean up in-memory state
+      const deletedId = currentRoomId;
+      const rooms = getRooms().filter(r => r.id !== deletedId);
       saveRooms(rooms);
+      delete presenceMap[deletedId];
+      delete knownPresenceTags[deletedId];
+      delete presenceLastSeen[deletedId];
+      saveKnownTags();
       closeSettings();
       currentRoomId = null;
       if (rooms.length > 0) {
@@ -5141,6 +5151,7 @@ async function purgeRoomLocally(roomId) {
   delete presenceMap[roomId];
   delete knownPresenceTags[roomId];
   delete presenceLastSeen[roomId];
+  saveKnownTags();
   showToast(t('toast.room_expired').replace('{name}', roomName), true);
   closeSettings();
   if (currentRoomId === roomId) {
@@ -5198,6 +5209,7 @@ async function leaveRoom() {
   delete presenceMap[leavingId];
   delete knownPresenceTags[leavingId];
   delete presenceLastSeen[leavingId];
+  saveKnownTags();
 
   closeSettings();
   currentRoomId = null;
@@ -5426,6 +5438,14 @@ function updateActionButton() {
 /* ── Init ─────────────────────────────────────────────────────────────────── */
 async function init() {
   db = await openDB();
+
+  // Load persisted known presence tags into memory
+  try {
+    const stored = getKnownTags();
+    for (const roomId in stored) {
+      knownPresenceTags[roomId] = new Set(stored[roomId]);
+    }
+  } catch(e) {}
 
   // Seed roomLastActivity from stored messages so the sidebar sort is correct on startup
   try {
@@ -5675,7 +5695,7 @@ function setupEventListeners() {
           return;
         }
       }
-      // Add to local list and mark for joined_room broadcast
+      // Add to local list and mark as new join (suppress join notices on first sync for this room)
       firstJoinRooms.add(roomId);
       const rooms = getRooms();
       rooms.push({ id: roomId, name: '', password, deleteToken: null, retention: 2, joinedAt: new Date().toISOString() });
