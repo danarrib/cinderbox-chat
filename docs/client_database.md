@@ -181,6 +181,20 @@ Key: 64-char hex sender tag. Value: `{ handle: string, avatar: string|null }`.
 
 ---
 
+### `cc_presence_seen`
+
+| Property | Value |
+|----------|-------|
+| Type | JSON object (nested map) |
+| Example | `{"<roomId>": {"<tag>": 1718000000}}` |
+| Written | After every sync that processes presence for any room; also on room leave, delete, or purge. |
+| Read | On startup, to restore `presenceLastSeen` into memory. |
+| Deleted | Per-room entry removed when the room is left, deleted, or purged. Entire key cleared on "clear all data". |
+
+Maps each `roomId → { senderTag → Unix timestamp (seconds) }`. Stores the last time each known participant was seen in the server's presence list. Used for "last seen" display and for pruning participants who have been absent longer than the room's presence expiry (`min(retention_period, 24h)`).
+
+---
+
 ### `cc_known_tags`
 
 | Property | Value |

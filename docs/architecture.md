@@ -113,6 +113,7 @@ All keys are prefixed `cc_`. Values are read on every page load; there is no in-
 | `cc_lang` | String | Active UI locale: `"en"` or `"pt-BR"`. Read by `applyI18n()` on every language change and on startup. Defaults to `"en"` if absent. |
 | `cc_last_room` | String or absent | ID of the last active room. Restored on next launch; falls back to the first room in the list if absent or no longer valid. |
 | `cc_known_tags` | JSON object | Map of `roomId → [senderTag, ...]`. Persisted known presence tags per room, used to detect new arrivals without generating false join notices after a cold start. |
+| `cc_presence_seen` | JSON object | Map of `roomId → {tag → Unix timestamp}`. Last-seen timestamps for each known presence tag. Used for "last seen" display and stale-presence pruning. |
 | `cc_debug` | String or absent | Set to `"1"` to enable verbose `[cbx]` console logging. Absent by default. |
 
 **Room object structure (inside `cc_rooms` array):**
@@ -199,7 +200,7 @@ Four additional structures support the presence model:
 - `knownPresenceTags` (`roomId → Set`) — tracks every tag ever seen for a room. Persisted across sessions in `cc_known_tags` (localStorage). Used to detect new arrivals and generate local join notices.
 - `firstJoinRooms` (Set of roomIds) — marks rooms where the first sync should seed `knownPresenceTags` without generating join notices (i.e., rooms the user just joined — they are the new arrival, not the others).
 - `coldStartDone` (boolean) — starts `false`, set to `true` after the first sync completes. Gates two behaviors: join-notice generation (suppressed on cold start) and the cold-start profile blast.
-- `presenceLastSeen` (`roomId → {tag → ISO timestamp}`) — stores the `updated_at` timestamp returned by the server for each presence entry. Used to display "last seen" relative times in the participants list.
+- `presenceLastSeen` (`roomId → {tag → Unix timestamp (seconds)}`) — stores the `updated_at` Unix timestamp returned by the server for each presence entry. Persisted to `cc_presence_seen` in localStorage. Used both for "last seen" display in the participants list and for client-side stale-presence pruning.
 
 ### Join detection
 
@@ -210,6 +211,14 @@ Four additional structures support the presence model:
 - **Normal operation** (`coldStartDone` is `true`, room not in `firstJoinRooms`): each newly seen tag triggers a locally written `system_notice` message ("X joined the room."). The notice ID is deterministic (`'joined:' + roomId + ':' + tag`) to prevent duplicates. If the profile for that tag has not yet arrived, the short tag (first 8 chars + `…`) is used as a placeholder; the notice is updated with the real handle when the `profile_update` is received.
 
 `knownPresenceTags` is persisted to `cc_known_tags` in localStorage after each sync and cleaned up when a room is left, purged, or deleted. This prevents cold-start noise (every currently-online participant appearing to "join" after every app restart).
+
+### Stale presence pruning
+
+A participant who stops syncing will eventually drop off the server's presence list. The client mirrors this by pruning tags whose `presenceLastSeen` timestamp is older than the room's presence expiry threshold — `min(retention_period, 24h)`. Pruning happens on startup (before the first sync) and after each room's presence is processed in the sync loop. Pruned tags are removed silently (no "left" notice); if they return later they appear as a new join.
+
+### Server-side presence expiry
+
+Presence rows are expired using a dedicated `presence_interval()` capped at 24 hours, separate from the message `retention_interval()`. Permanent rooms (retention=5) have no message expiry but their presence rows still expire after 24 hours, preventing unbounded database growth.
 
 ---
 

@@ -3302,6 +3302,37 @@ function saveKnownTags() {
   for (const roomId in knownPresenceTags) { obj[roomId] = [...knownPresenceTags[roomId]]; }
   localStorage.setItem('cc_known_tags', JSON.stringify(obj));
 }
+function getPresenceSeen() { try { return JSON.parse(localStorage.getItem('cc_presence_seen') || '{}'); } catch { return {}; } }
+function savePresenceSeen() { localStorage.setItem('cc_presence_seen', JSON.stringify(presenceLastSeen)); }
+
+// Returns the presence expiry threshold in seconds for a room.
+// Capped at 24 hours regardless of retention, matching server-side presence_interval().
+function presenceExpirySeconds(room) {
+  const ms = [3600000, 21600000, 86400000, 43200000];
+  return Math.min(ms[room.retention] ?? 86400000, 86400000) / 1000;
+}
+
+// Remove tags from presenceMap/knownPresenceTags/presenceLastSeen whose last-seen
+// timestamp is older than the room's presence expiry. Silently — no leave notice.
+function pruneStalePresence(roomId, room) {
+  const threshold = presenceExpirySeconds(room);
+  const now = Date.now() / 1000;
+  const lastSeen = presenceLastSeen[roomId];
+  const known = knownPresenceTags[roomId];
+  if (!known || !lastSeen) return;
+  let changed = false;
+  for (const tag of [...known]) {
+    const ts = lastSeen[tag];
+    if (ts && (now - ts) > threshold) {
+      dbg(`Presence: pruning stale tag ${tag8(tag)} from room ${roomId.slice(0,8)}… (last seen ${Math.round((now-ts)/3600)}h ago)`);
+      known.delete(tag);
+      if (presenceMap[roomId]) presenceMap[roomId] = presenceMap[roomId].filter(t => t !== tag);
+      delete lastSeen[tag];
+      changed = true;
+    }
+  }
+  if (changed) { saveKnownTags(); savePresenceSeen(); }
+}
 
 function getRoomById(id) { return getRooms().find(r => r.id === id) || null; }
 function updateRoom(updated) {
@@ -4485,12 +4516,14 @@ async function doSync() {
         if (!presenceMap[roomId].includes(tag)) presenceMap[roomId].push(tag);
       }
       saveKnownTags();
+      savePresenceSeen();
+      const room = getRoomById(roomId);
+      if (room) pruneStalePresence(roomId, room);
       if (roomId === currentRoomId) {
         updateChatTopbar();
       }
 
       // Process inbox
-      const room = getRoomById(roomId);
       if (!room) continue;
       const key = await deriveKey(room.password, roomId);
       const myTag = await sha256(handle + roomId);
@@ -5121,7 +5154,7 @@ async function deleteRoom() {
       delete presenceMap[deletedId];
       delete knownPresenceTags[deletedId];
       delete presenceLastSeen[deletedId];
-      saveKnownTags();
+      saveKnownTags(); savePresenceSeen();
       closeSettings();
       currentRoomId = null;
       if (rooms.length > 0) {
@@ -5151,7 +5184,7 @@ async function purgeRoomLocally(roomId) {
   delete presenceMap[roomId];
   delete knownPresenceTags[roomId];
   delete presenceLastSeen[roomId];
-  saveKnownTags();
+  saveKnownTags(); savePresenceSeen();
   showToast(t('toast.room_expired').replace('{name}', roomName), true);
   closeSettings();
   if (currentRoomId === roomId) {
@@ -5209,7 +5242,7 @@ async function leaveRoom() {
   delete presenceMap[leavingId];
   delete knownPresenceTags[leavingId];
   delete presenceLastSeen[leavingId];
-  saveKnownTags();
+  saveKnownTags(); savePresenceSeen();
 
   closeSettings();
   currentRoomId = null;
@@ -5439,11 +5472,22 @@ function updateActionButton() {
 async function init() {
   db = await openDB();
 
-  // Load persisted known presence tags into memory
+  // Load persisted known presence tags and last-seen timestamps into memory
   try {
-    const stored = getKnownTags();
-    for (const roomId in stored) {
-      knownPresenceTags[roomId] = new Set(stored[roomId]);
+    const storedTags = getKnownTags();
+    for (const roomId in storedTags) {
+      knownPresenceTags[roomId] = new Set(storedTags[roomId]);
+    }
+    const storedSeen = getPresenceSeen();
+    for (const roomId in storedSeen) {
+      presenceLastSeen[roomId] = storedSeen[roomId];
+    }
+  } catch(e) {}
+
+  // Prune tags that have been absent longer than the room's presence expiry
+  try {
+    for (const room of getRooms()) {
+      pruneStalePresence(room.id, room);
     }
   } catch(e) {}
 

@@ -461,10 +461,10 @@ if ($action === 'sync') {
 
         // Fetch presence (excluding this sender_tag)
         $presence = [];
-        $retention_interval = retention_interval($retention);
+        $pres_interval = presence_interval($retention);
         $pres_fetch = $pdo->prepare(
             "SELECT sender_tag, UNIX_TIMESTAMP(updated_at) AS last_seen FROM presence
-             WHERE room_id = ? AND sender_tag != ? AND updated_at > (NOW() - INTERVAL {$retention_interval})"
+             WHERE room_id = ? AND sender_tag != ? AND updated_at > (NOW() - INTERVAL {$pres_interval})"
         );
         $pres_fetch->execute([$room_id, $sender_tag]);
         foreach ($pres_fetch->fetchAll() as $pr) {
@@ -507,17 +507,35 @@ function retention_interval(int $retention): string {
     }
 }
 
-function lazy_expiry(PDO $pdo, string $room_id, int $retention): void {
-    if ($retention === 5) return;
+// Presence rows always expire after at most 24 hours, regardless of room retention.
+// Permanent rooms have no message expiry, but presence must still cycle to avoid unbounded growth.
+function presence_interval(int $retention): string {
+    switch ($retention) {
+        case 0: return '1 HOUR';
+        case 1: return '6 HOUR';
+        case 3: return '12 HOUR';
+        default: return '24 HOUR'; // covers retention 2, 4, 5, and any unknown value
+    }
+}
 
-    $interval = retention_interval($retention);
+function lazy_expiry(PDO $pdo, string $room_id, int $retention): void {
+    if ($retention === 5) {
+        // Permanent rooms: messages never expire, but presence still does
+        $pdo->prepare(
+            "DELETE FROM presence WHERE room_id = ? AND updated_at < (NOW() - INTERVAL 24 HOUR)"
+        )->execute([$room_id]);
+        return;
+    }
+
+    $msg_interval = retention_interval($retention);
+    $pres_interval = presence_interval($retention);
 
     $pdo->prepare(
-        "DELETE FROM messages WHERE room_id = ? AND created_at < (NOW() - INTERVAL {$interval})"
+        "DELETE FROM messages WHERE room_id = ? AND created_at < (NOW() - INTERVAL {$msg_interval})"
     )->execute([$room_id]);
 
     $pdo->prepare(
-        "DELETE FROM presence WHERE room_id = ? AND updated_at < (NOW() - INTERVAL {$interval})"
+        "DELETE FROM presence WHERE room_id = ? AND updated_at < (NOW() - INTERVAL {$pres_interval})"
     )->execute([$room_id]);
 }
 
