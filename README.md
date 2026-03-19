@@ -93,6 +93,38 @@ Any new database migrations run automatically on the first request after deploym
 
 ---
 
+## Automated Testing
+
+The test suite uses [Playwright](https://playwright.dev/) and runs against a live instance of the app. Each test produces a self-contained evidence report with screenshots and step-by-step descriptions.
+
+### Prerequisites
+
+Node.js is required. Install dependencies once:
+
+```bash
+npm install
+npx playwright install chromium
+```
+
+### Running Tests
+
+```bash
+npm test                                         # run all tests against cc.outros.net
+BASE_URL=https://your-instance.com npm test      # run against a different instance
+npm run test:headed                              # run with a visible browser window
+```
+
+### Test Evidence
+
+Each passing test generates a directory under `docs/testing_evidences/` containing a `README.md` report and one screenshot per step. These reports are committed to the repository as verifiable records of tested behaviour — only after all tests pass.
+
+| Document | Description |
+|----------|-------------|
+| [Test 001 — Solo Full Workflow](docs/testing_evidences/001-Solo-Full-Workflow/README.md) | End-to-end solo session: create room, send text and image, set profile, toggle theme and language, rename and delete room |
+| [Test 002 — Two Participants Workflow](docs/testing_evidences/002-Two-Participants-Workflow/README.md) | Two-browser session: join notification, text exchange, single-view message open and ack, leave notification, delete room |
+
+---
+
 ## Security Design
 
 | Property | Implementation |
