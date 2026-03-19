@@ -21,7 +21,7 @@ No Node.js, no Composer, no Docker, no build step.
 Upload the following files to your web root (e.g., `~/public_html/` or `~/yourdomain.com/`):
 
 ```bash
-scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_html/
+scp src/api.php src/index.html src/sw.js src/manifest.json src/icon.svg src/.htaccess user@yourhost.com:~/public_html/
 ```
 
 Only `index.html` and `api.php` are strictly required for the application to function. `sw.js`, `manifest.json`, and `icon.svg` are needed for PWA/offline support and the install prompt.
@@ -89,7 +89,7 @@ The migration system runs on every request (not just setup). When you deploy a n
 To deploy an update:
 
 ```bash
-scp api.php index.html sw.js manifest.json icon.svg user@yourhost.com:~/public_html/
+scp src/api.php src/index.html src/sw.js src/manifest.json src/icon.svg src/.htaccess user@yourhost.com:~/public_html/
 ```
 
 Any new database migrations run automatically on the first request after the new `api.php` is in place.

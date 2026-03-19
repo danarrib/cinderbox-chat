@@ -72,7 +72,7 @@ O Cinderbox Chat faz deploy como um pequeno conjunto de arquivos estáticos junt
 
 1. Copie os arquivos para o diretório raiz do seu servidor:
    ```bash
-   scp api.php index.html sw.js manifest.json icon.svg .htaccess usuario@seuservidor.com:~/public_html/
+   scp src/api.php src/index.html src/sw.js src/manifest.json src/icon.svg src/.htaccess usuario@seuservidor.com:~/public_html/
    ```
 
 2. Acesse seu site no navegador. Uma tela de configuração aparecerá solicitando suas credenciais MySQL.
@@ -84,7 +84,7 @@ Pronto. Sem etapa de build, sem gerenciador de pacotes, sem variáveis de ambien
 ### Implantando Atualizações
 
 ```bash
-scp api.php index.html sw.js manifest.json icon.svg .htaccess usuario@seuservidor.com:~/public_html/
+scp src/api.php src/index.html src/sw.js src/manifest.json src/icon.svg src/.htaccess usuario@seuservidor.com:~/public_html/
 ```
 
 Quaisquer novas migrações de banco de dados são executadas automaticamente na primeira requisição após a implantação.

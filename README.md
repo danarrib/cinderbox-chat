@@ -72,7 +72,7 @@ Cinderbox Chat deploys as a small set of static files alongside a single PHP scr
 
 1. Copy the files to your web root:
    ```bash
-   scp api.php index.html sw.js manifest.json icon.svg .htaccess user@yourhost.com:~/public_html/
+   scp src/api.php src/index.html src/sw.js src/manifest.json src/icon.svg src/.htaccess user@yourhost.com:~/public_html/
    ```
 
 2. Visit your site in a browser. A setup screen will appear asking for your MySQL credentials.
@@ -84,7 +84,7 @@ That's all. No build step, no package manager, no environment variables.
 ### Deploying Updates
 
 ```bash
-scp api.php index.html sw.js manifest.json icon.svg .htaccess user@yourhost.com:~/public_html/
+scp src/api.php src/index.html src/sw.js src/manifest.json src/icon.svg src/.htaccess user@yourhost.com:~/public_html/
 ```
 
 Any new database migrations run automatically on the first request after deployment.
