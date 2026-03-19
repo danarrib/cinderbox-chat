@@ -44,6 +44,7 @@ A public instance is available at **[cc.outros.net](https://cc.outros.net)** —
 - **Message Info modal** — tap any outgoing message to see per-recipient delivery, view, and deletion status
 - **Context menu** — right-click or long-press any message to reply, delete, or view message data
 - **Image compression** — photos are automatically resized to 1000px and re-encoded as AVIF (with WebP/JPEG fallback) before sending
+- **Single-view toggle in image preview** — the single-view toggle is available directly inside the image preview modal, so it can be set after selecting the image
 - **No CDN, no external requests** — the entire frontend is a single self-contained HTML file
 
 ---
@@ -132,6 +133,7 @@ All evidence reports live under [`docs/testing_evidences/`](docs/testing_evidenc
 | [Test 008 — Room Retention Policy](docs/testing_evidences/008-Room-Retention-Policy/README.md) | Single-browser session: create rooms with 1h, permanent, and 12h retention, verify settings panel |
 | [Test 009 — Join with Wrong Password](docs/testing_evidences/009-Join-with-Wrong-Password/README.md) | Two-browser session: client-side key validation failure, error shown, join screen remains |
 | [Test 010 — Profile Propagation](docs/testing_evidences/010-Profile-Propagation/README.md) | Two-browser session: profile_update broadcast, handle visible in participant list on recipient |
+| [Test 011 — Clear Data](docs/testing_evidences/011-Clear-Data/README.md) | Single-browser session: send message, clear all device data, verify landing screen and clean localStorage |
 
 ---
 
