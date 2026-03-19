@@ -118,10 +118,20 @@ npm run test:headed                              # run with a visible browser wi
 
 Each passing test generates a directory under `docs/testing_evidences/` containing a `README.md` report and one screenshot per step. These reports are committed to the repository as verifiable records of tested behaviour — only after all tests pass.
 
+All evidence reports live under [`docs/testing_evidences/`](docs/testing_evidences/).
+
 | Document | Description |
 |----------|-------------|
 | [Test 001 — Solo Full Workflow](docs/testing_evidences/001-Solo-Full-Workflow/README.md) | End-to-end solo session: create room, send text and image, set profile, toggle theme and language, rename and delete room |
-| [Test 002 — Two Participants Workflow](docs/testing_evidences/002-Two-Participants-Workflow/README.md) | Two-browser session: join notification, text exchange, single-view message open and ack, leave notification, delete room |
+| [Test 002 — Two Participants Workflow](docs/testing_evidences/002-Two-Participants-Workflow/README.md) | Two-browser session: join notification, text exchange, single-view message, leave room, delete room |
+| [Test 003 — Audio Message Workflow](docs/testing_evidences/003-Audio-Message-Workflow/README.md) | Two-browser session: record and send audio, receive audio player, room deletion detected by participant |
+| [Test 004 — Single-View Image Message](docs/testing_evidences/004-Single-View-Image-Message/README.md) | Two-browser session: send single-view image, open and wipe on recipient side, deletion ack confirmed |
+| [Test 005 — Message Deletion](docs/testing_evidences/005-Message-Deletion/README.md) | Two-browser session: delete for everyone, tombstone on sender, message removed on recipient |
+| [Test 006 — Message Reply](docs/testing_evidences/006-Message-Reply/README.md) | Two-browser session: reply via context menu, quoted snippet rendered inline on recipient |
+| [Test 007 — Multiple Rooms](docs/testing_evidences/007-Multiple-Rooms/README.md) | Single-browser session: create two rooms, verify message isolation, switch between rooms |
+| [Test 008 — Room Retention Policy](docs/testing_evidences/008-Room-Retention-Policy/README.md) | Single-browser session: create rooms with 1h, permanent, and 12h retention, verify settings panel |
+| [Test 009 — Join with Wrong Password](docs/testing_evidences/009-Join-with-Wrong-Password/README.md) | Two-browser session: client-side key validation failure, error shown, join screen remains |
+| [Test 010 — Profile Propagation](docs/testing_evidences/010-Profile-Propagation/README.md) | Two-browser session: profile_update broadcast, handle visible in participant list on recipient |
 
 ---
 
