@@ -5787,12 +5787,27 @@ function setupEventListeners() {
     img.src = url;
   });
   document.getElementById('btn-save-profile').onclick = async () => {
+    const oldHandle = getHandle();
     const handle = document.getElementById('profile-handle').value.trim() || randomHandle();
     localStorage.setItem('cc_handle', handle);
     const previewSrc = document.getElementById('avatar-preview').src;
     if (previewSrc && !previewSrc.endsWith('undefined') && previewSrc.startsWith('data:')) {
       localStorage.setItem('cc_avatar', previewSrc);
     }
+    // Sender tag is SHA-256(handle + room_id) — recompute _myTag for every room
+    // and evict the old ghost tag from presence so it doesn't appear as a duplicate
+    for (const room of getRooms()) {
+      const oldTag = await sha256(oldHandle + room.id);
+      const newTag = await sha256(handle + room.id);
+      updateRoom({ id: room.id, _myTag: newTag });
+      if (presenceMap[room.id]) {
+        presenceMap[room.id] = presenceMap[room.id].filter(t => t !== oldTag);
+      }
+      if (knownPresenceTags[room.id]) {
+        knownPresenceTags[room.id].delete(oldTag);
+      }
+    }
+    saveKnownTags();
     await broadcastProfileUpdate();
     updateNavAvatar();
     showToast(t('toast.profile_saved'));
