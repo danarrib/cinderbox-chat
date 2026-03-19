@@ -3565,6 +3565,7 @@ function showScreen(id) {
   if (el) el.classList.add('active');
   if (id === 'chat') requestNotificationPermission();
   if (id === 'landing') {
+    window.location.hash = '';
     const dismissBtn = document.getElementById('btn-dismiss-landing');
     if (dismissBtn) dismissBtn.classList.toggle('d-none', getRooms().length === 0);
   }
